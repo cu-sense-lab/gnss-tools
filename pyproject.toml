@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "gnss-tools"
+version = "0.1.0"
+description = "A suite of tools for handling GNSS data and datastructures, including RINEX parsing, orbit propagation, signal generation, and more."
+authors = ["Brian Breitsch <brian.breitsch@colorado.edu>"]
+license = "BSD-2"
+readme = "README.md"
+packages = [{include = "gnss_tools"}]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<4.0"
+numpy = "^1.26.4"
+h5py = "^3.11.0"
+scipy = "^1.13.0"
+requests = "^2.31.0"
+aenum = "^3.1.15"
+ipykernel = "^6.29.4"
+numba = "^0.59.1"
+sympy = "^1.12.1"
+netcdf4 = "^1.7.1.post1"
+hatanaka = "^2.8.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+nbstripout = "^0.7.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
