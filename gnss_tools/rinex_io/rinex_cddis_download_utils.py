@@ -3,13 +3,13 @@ Author Brian Breitsch
 Date: 2025-01-02
 """
 
-from gnss_lib.misc.data_utils import format_filepath, http_download
+from gnss_tools.misc.data_utils import format_filepath, http_download
 import requests
 import os
 import logging
 from datetime import datetime
 from typing import List, Tuple, Optional
-import gnss_lib.rinex_io.rinex3 as rinex3
+import gnss_tools.rinex_io.rinex3 as rinex3
 import hatanaka
 
 

@@ -2,12 +2,12 @@
 import logging
 from typing import Dict, List, Tuple, Optional
 import requests
-from gnss_lib.misc.data_utils import format_filepath
+from gnss_tools.misc.data_utils import format_filepath
 from datetime import datetime, timedelta
 import os
-import gnss_lib.rinex_io.rinex3 as rinex3
+import gnss_tools.rinex_io.rinex3 as rinex3
 import hatanaka
-from gnss_lib.misc.data_utils import http_download
+from gnss_tools.misc.data_utils import http_download
 
 DATA_DIR = os.environ.get("DATA_DIR")
 

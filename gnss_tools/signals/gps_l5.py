@@ -142,3 +142,22 @@ CODE_SEQUENCES_L5I = {prn: (1 - 2 * generate_code_sequence_L5I(prn)).astype(np.i
 CODE_SEQUENCES_L5Q = {prn: (1 - 2 * generate_code_sequence_L5Q(prn)).astype(np.int8) for prn in range(1, 33)}
 
 
+
+_CODE_SEQUENCES_GPS_L5I = {}
+def get_GPS_L5I_code_sequence(prn: int) -> np.ndarray:
+    '''
+    Returns the code sequence corresponding to the given PRN
+    '''
+    if prn not in _CODE_SEQUENCES_GPS_L5I:
+        _CODE_SEQUENCES_GPS_L5I[prn] = generate_code_sequence_L5I(prn)
+    return _CODE_SEQUENCES_GPS_L5I[prn]
+
+
+_CODE_SEQUENCES_GPS_L5Q = {}
+def get_GPS_L5Q_code_sequence(prn: int) -> np.ndarray:
+    '''
+    Returns the code sequence corresponding to the given PRN
+    '''
+    if prn not in _CODE_SEQUENCES_GPS_L5Q:
+        _CODE_SEQUENCES_GPS_L5Q[prn] = generate_code_sequence_L5Q(prn)
+    return _CODE_SEQUENCES_GPS_L5Q[prn]

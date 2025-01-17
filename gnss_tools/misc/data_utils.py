@@ -16,7 +16,7 @@ import gzip
 import shutil
 import subprocess
 
-from gnss_lib.time.gpst import GPSTime
+from gnss_tools.time.gpst import GPSTime
 
 
 def format_filepath(filepath_expr: str, dt: datetime.datetime = None, **kwargs) -> str:

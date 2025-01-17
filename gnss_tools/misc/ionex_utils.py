@@ -8,7 +8,7 @@ import requests
 import gzip
 from datetime import datetime
 from typing import List, Tuple, Optional
-from gnss_lib.misc.data_utils import format_filepath
+from gnss_tools.misc.data_utils import format_filepath
 
 
 def get_cddis_ionex_file_list(

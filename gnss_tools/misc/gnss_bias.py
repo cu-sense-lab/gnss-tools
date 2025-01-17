@@ -4,9 +4,9 @@ Date: 2025-01-02
 """
 
 import os
-from gnss_lib.time.gpst import GPSTime
-from gnss_lib.misc.data_utils import cddis_download, decompress, format_filepath, http_download
-from gnss_lib.rinex_io.sinex_bias import SINEX_Dataset, SINEX_BiasSolutionEntry
+from gnss_tools.time.gpst import GPSTime
+from gnss_tools.misc.data_utils import cddis_download, decompress, format_filepath, http_download
+from gnss_tools.rinex_io.sinex_bias import SINEX_Dataset, SINEX_BiasSolutionEntry
 from datetime import datetime, timedelta
 from typing import List, Dict
 

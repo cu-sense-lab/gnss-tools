@@ -7,8 +7,8 @@ import os, tarfile, gzip, shutil, re, numpy as np
 from typing import Tuple
 import netCDF4
 from datetime import datetime, timedelta
-from gnss_lib.misc.data_utils import format_filepath, ftp_download
-from gnss_lib.time.gpst import GPSTime
+from gnss_tools.misc.data_utils import format_filepath, ftp_download
+from gnss_tools.time.gpst import GPSTime
 
 
 def download_ISDC_NAVBIT_file(

@@ -10,7 +10,7 @@ Utilities for SP3 data file download and parsing
 import os
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict
-from gnss_lib.time.gtime import GTIME_DTYPE
+from gnss_tools.time.gtime import GTIME_DTYPE
 import numpy as np
 import scipy.interpolate
 from .parse_sp3 import Dataset, SP3Arrays

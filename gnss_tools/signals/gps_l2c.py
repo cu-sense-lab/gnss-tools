@@ -2,8 +2,6 @@ from typing import Dict, List
 
 import numpy as np
 
-from gnss_lib.signals.type import SystemType, SignalId, SignalType
-
 
 CODE_LENGTH_L2CM = 10230
 CODE_LENGTH_L2CL = 767250
@@ -104,14 +102,25 @@ def generate_code_sequence_L2CL(prn: int) -> np.ndarray:
         state = shift_state(state)
     return code_seq_01
 
-SIGNAL_IDS: List[SignalId] = [
-    SignalId(SystemType.GPS, SignalType.L2CLM, prn) for prn in range(1, 33)
-]
-
-PRN_TO_SIGNAL_ID: Dict[int, SignalId] = {
-    sig_id.prn: sig_id for sig_id in SIGNAL_IDS
-}
-
 CODE_SEQUENCES_L2CL = {prn: 1 - 2 * generate_code_sequence_L2CL(prn).astype(np.int8) for prn in range(1, 33)}
 CODE_SEQUENCES_L2CM = {prn: 1 - 2 * generate_code_sequence_L2CM(prn).astype(np.int8) for prn in range(1, 33)}
 
+
+_CODE_SEQUENCES_GPS_L2CL = {}
+def get_GPS_L2CL_code_sequence(prn: int) -> np.ndarray:
+    '''
+    Returns the code sequence corresponding to the given PRN
+    '''
+    if prn not in _CODE_SEQUENCES_GPS_L2CL:
+        _CODE_SEQUENCES_GPS_L2CL[prn] = generate_code_sequence_L2CL(prn)
+    return _CODE_SEQUENCES_GPS_L2CL[prn]
+
+
+_CODE_SEQUENCES_GPS_L2CM = {}
+def get_GPS_L2CM_code_sequence(prn: int) -> np.ndarray:
+    '''
+    Returns the code sequence corresponding to the given PRN
+    '''
+    if prn not in _CODE_SEQUENCES_GPS_L2CM:
+        _CODE_SEQUENCES_GPS_L2CM[prn] = generate_code_sequence_L2CM(prn)
+    return _CODE_SEQUENCES_GPS_L2CM[prn]

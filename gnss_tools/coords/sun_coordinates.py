@@ -5,7 +5,7 @@ Date: 2025-01-02
 
 from datetime import datetime
 import numpy as np
-from gnss_lib.time.julian import dt2julian
+from gnss_tools.time.julian import dt2julian
 
 def compute_sun_eci_coordinates(time: datetime) -> np.ndarray:
     '''Return sun ECI coordinates for `times`.
