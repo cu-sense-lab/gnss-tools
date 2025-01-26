@@ -6,6 +6,9 @@ from .gpst import (
     SECONDS_IN_WEEK,
     convert_datetime_to_gps_seconds,
     convert_gps_seconds_to_datetime,
+    convert_datetime_array_to_gps_seconds_array,
+    convert_gps_seconds_array_to_datetime64_array,
+    convert_gps_seconds_to_datetime_list,
     GPSTime,
 )
 
@@ -21,7 +24,7 @@ from .gtime import (
     interpolate_gtime,
 )
 
-from .julian import dt2julian
+from .julian import datetime_to_julian
 
 from .leap_seconds import OffsetEpoch, NTP_EPOCH, LEAP_SECOND_EPOCHS
 

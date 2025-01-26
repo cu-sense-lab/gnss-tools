@@ -4,7 +4,7 @@ Date: 2025-01-02
 """
 
 import numpy as np
-from typing import List, Dict, Any, Optional, Tuple
+from typing import Callable, Iterable, List, Dict, Any, Optional, Tuple
 from datetime import datetime
 
 # RINEX 2.10 - 2.11
@@ -14,7 +14,7 @@ CONSTELLATION_IDS = {
     "E": "Galileo",
     "S": "SBAS",
 }
-BAND_FREQUENCIES = {
+BAND_FREQUENCIES: dict[str, float | Callable[[int], float]] = {
     "L1": 1575.42,
     "L2": 1227.60,
     "L5": 1176.45,
@@ -93,7 +93,7 @@ OBSERVATION_DATATYPES = {
 }
 
 
-def parse_RINEX2_header(lines: List[str]) -> Dict[str, Any]:
+def parse_RINEX2_header(header_lines: List[str]) -> Dict[str, Any]:
     """
     ------------------------------------------------------------
     Given list of lines corresponding to the header of a RINEX 3
@@ -110,7 +110,7 @@ def parse_RINEX2_header(lines: List[str]) -> Dict[str, Any]:
     """
     header = {}
     header["comments"] = []
-    lines = iter(lines)
+    lines: Iterable[str] = iter(header_lines)
     try:
         while True:
             line = next(lines)
@@ -165,7 +165,7 @@ def parse_RINEX2_header(lines: List[str]) -> Dict[str, Any]:
 
 
 def parse_RINEX2_obs_data(
-    lines: List[str],
+    obs_lines: List[str],
     observations: List[str],
     century: int = 2000,
     exception_behavior: Optional[str] = None,
@@ -195,11 +195,12 @@ def parse_RINEX2_obs_data(
     data: Dict[str, Any] = (
         {}
     )  # <sat_id>: {"index": [<int...>], <obs_id>: [<values...>]}
-    lines = iter(lines)
+    lines: Iterable[str] = iter(obs_lines)
     epoch_index = 0
     time = []
     epoch_flags = []
     comments = []
+    line: Optional[str] = None
     while True:
         try:
             # at each epoch, the two-digit year, month, day, hour, minute, and seconds
@@ -279,6 +280,8 @@ def parse_RINEX2_obs_data(
         except Exception as e:
             # TODO:
             # need to be able to handle mid-file comments
+            if line is None:
+                raise e
             if line.rstrip().endswith("COMMENT"):
                 comments.append((epoch_index, line))
             elif exception_behavior == "skip":
@@ -290,7 +293,7 @@ def parse_RINEX2_obs_data(
 
 
 def transform_values_from_RINEX2_obs(
-    rinex_data: Dict[str, Any], frequency_numbers: Dict[str, float] = None
+    rinex_data: Dict[str, Any], frequency_numbers: Optional[Dict[str, int]] = None
 ) -> Dict[str, Any]:
     """
     ------------------------------------------------------------
@@ -329,15 +332,19 @@ def transform_values_from_RINEX2_obs(
                 band_id = mapping["band"]
                 obs_name = mapping["name"]
                 if band_id not in data[sat_id].keys():
-                    frequency = BAND_FREQUENCIES[band_id]
-                    if constellation == "GLONASS" and callable(frequency):
+                    freq_or_freq_func = BAND_FREQUENCIES[band_id]
+                    if isinstance(freq_or_freq_func, float):
+                        frequency = freq_or_freq_func
+                    elif constellation == "GLONASS" and callable(freq_or_freq_func):
                         if (
                             frequency_numbers is not None
                             and sat_id in frequency_numbers.keys()
                         ):
-                            frequency = frequency(frequency_numbers[sat_id])
+                            frequency = freq_or_freq_func(frequency_numbers[sat_id])
                         else:
                             frequency = np.nan
+                    else:
+                        frequency = np.nan
                     data[sat_id][band_id] = {"frequency": frequency * 1e6}
                 values = np.array(rnx_sat[obs_id])
                 if not np.all(np.isnan(values)):
@@ -384,6 +391,7 @@ def parse_RINEX2_obs_file(
     """
     with open(filepath, "r") as f:
         lines = list(f.readlines())
+    i = 0
     for i, line in enumerate(lines):
         if line.find("END OF HEADER") >= 0:
             break

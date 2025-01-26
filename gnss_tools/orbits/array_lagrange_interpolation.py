@@ -59,8 +59,11 @@ def numba_array_lagrange_interpolation_float64(
         # Check that we are using the closest `order` elements, starting from ref_index
         # If the closest elements are too far apart, output nan and update the reference index
         # if 
-        if abs(x_new[output_index] - x[ref_index]) > max_xdiff or abs(x_new[output_index] - x[ref_index + order - 1]) > max_xdiff:
-            xdiff_too_large = True
+        # if abs(x_new[output_index] - x[ref_index]) > max_xdiff or abs(x_new[output_index] - x[ref_index + order - 1]) > max_xdiff:
+        #     xdiff_too_large = True
+        if np.isnan(x_new[output_index]):
+            y_new[output_index, :] = np.nan
+            continue
         
         while abs(x_new[output_index] - x[ref_index + order]) < abs(x_new[output_index] - x[ref_index]):
             ref_index += 1
@@ -136,7 +139,7 @@ def compute_array_lagrange_interpolation(
         The interpolated y-coordinates of the x_p points.
 
     """
-    is_sorted = lambda a: np.all(a[:-1] <= a[1:])
+    is_sorted = lambda a: np.all((a[:-1] <= a[1:]) | np.isnan(a[1:] - a[:-1]))
     if not is_sorted(x):
         raise ValueError("`x` must be sorted in ascending order.")
     if not is_sorted(x_p):

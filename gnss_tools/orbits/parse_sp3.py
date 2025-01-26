@@ -1,7 +1,7 @@
 from functools import lru_cache
 from datetime import datetime, timezone, timedelta
 import io
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Callable, Dict, Iterable, List, Optional, Tuple
 import numpy as np
 from dataclasses import dataclass
 
@@ -310,6 +310,7 @@ class Dataset:
     def get_sp3_arrays(
             self,
             remove_duplicates: bool = False,
+            convert_keys: Optional[Callable[[str], str]] = None
     ) -> SP3Arrays:
         if remove_duplicates:
             records = {}
@@ -331,12 +332,18 @@ class Dataset:
         
         for index, record in enumerate(records):
             for veh_id, entry in record.p_entries.items():
+                veh_id = veh_id if convert_keys is None else convert_keys(veh_id)
+                if entry is None:
+                    continue
                 if veh_id not in positions:
                     positions[veh_id] = np.nan * np.zeros((num_records, 3))
                     clocks[veh_id] = np.nan * np.zeros(num_records)
                 positions[veh_id][index, :] = entry[:3]
                 clocks[veh_id][index] = entry[3]
             for veh_id, entry in record.v_entries.items():
+                veh_id = veh_id if convert_keys is None else convert_keys(veh_id)
+                if entry is None:
+                    continue
                 if veh_id not in velocities:
                     velocities[veh_id] = np.nan * np.zeros((num_records, 3))
                     clock_rates[veh_id] = np.nan * np.zeros(num_records)

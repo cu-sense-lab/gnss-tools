@@ -45,7 +45,7 @@ def ecf2geo(
     timeout: Optional[int] = None,
     return_ROC: bool = False,
     tolerance: float = 1e-10,
-):
+) -> np.ndarray | Tuple[np.ndarray, np.ndarray]:
     """Converts ecf coordinates to geodetic coordinates,
 
     Parameters
@@ -125,7 +125,7 @@ def ecf2geo(
     return geo
 
 
-def local_enu(lat: float, lon: float):
+def local_enu(lat: np.ndarray, lon: np.ndarray) -> np.ndarray:
     Rl = np.array(
         [
             [
