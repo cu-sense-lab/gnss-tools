@@ -5,6 +5,7 @@ from .utils import (
     local_enu,
     ecf2enu,
     enu2sky,
+    xyz2sky,
     sky2enu,
     ecf2sky,
     local_radius_of_curvature,

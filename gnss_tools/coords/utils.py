@@ -201,6 +201,33 @@ def enu2sky(enu: NDArray[np.float64]):
     return np.column_stack((np.degrees(az), np.degrees(el), r)).squeeze()
 
 
+def xyz2sky(xyz: NDArray[np.float64]):
+    """Converts XYZ coordinates to azimuth, elevation, and radius
+    The Z axis is defined to be the direction of the observer's zenith.
+    Azimuth is measured counterclockwise from the X axis, which is
+    defined to be the direction of the observer's meridian.
+
+    Parameters
+    ----------
+    xyz : ndarray of shape(N,3)
+        XYZ coordinates
+
+    Returns
+    -------
+    output : ndarray of shape(N,3)
+        The spherical coordinates
+        (azimuth, elevation, radius) in degrees and meters
+    """
+    # xyz = make_3_tuple_array(xyz)
+    x = xyz[..., 0]
+    y = xyz[..., 1]
+    z = xyz[..., 2]
+    az = np.arctan2(y, x)
+    r = np.sqrt(x**2 + y**2 + z**2)
+    el = np.arcsin(z / r)
+    return np.stack((np.degrees(az), np.degrees(el), r), axis=-1)
+
+
 def sky2enu(sky: NDArray[np.float64]):
     """Converts local Sky coordinates back to local East-North-Up coordinates."""
     sky = make_3_tuple_array(sky)
