@@ -1,6 +1,13 @@
-from typing import Tuple
+from typing import Tuple, Optional
 import numpy as np
 import numba as nb
+import gnss_tools.coords.icososphere as icososphere
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.axes import Axes
+from matplotlib.colorbar import Colorbar
+import matplotlib.patches as patches
+import scipy.spatial
 
 @nb.jit(nopython=True)
 def numba_find_closest_vertex(
@@ -36,10 +43,10 @@ def spherical_mean_std(
         azimuths: np.ndarray,  # deg
         values: np.ndarray,
         icososphere_num_subdivisions: int = 2,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Returns:
-        bin_vertices, means, stds
+        bin_vertices, means, stds, counts
     """
     ico_vertices, _ = icososphere.generate_icososphere(icososphere_num_subdivisions)
     num_vertices = ico_vertices.shape[0]
@@ -54,18 +61,15 @@ def spherical_mean_std(
 
     means = np.nan * np.zeros(num_vertices)
     stds = np.nan * np.zeros(num_vertices)
+    counts = np.zeros(num_vertices)
     for i in range(num_vertices):
         indices = np.where(closest_vertices == i)[0]
+        counts[i] = len(indices)
         if len(indices) > 0:
             means[i] = np.mean(values[indices])
             stds[i] = np.std(values[indices])
-    return ico_vertices, means, stds
+    return ico_vertices, means, stds, counts
 
-import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
-from matplotlib.axes import Axes
-import matplotlib.patches as patches
-import scipy.spatial
 
 def plot_sky_voronoi_2d(
     azimuths: np.ndarray,
@@ -74,8 +78,12 @@ def plot_sky_voronoi_2d(
     clip_radius: float = 90,
     show_elevation_rings: bool = True,
     elevation_ring_spacing: int = 30,
-) -> Tuple[Figure, Axes]:
+    vmin: Optional[float] = None,
+    vmax: Optional[float] = None,
+) -> Tuple[Figure, Axes, Colorbar]:
     
+    vmin = np.min(values) if vmin is None else vmin
+    vmax = np.max(values) if vmax is None else vmax
 
     r = 90 - elevations
     theta = np.deg2rad(90 - azimuths)
@@ -86,7 +94,7 @@ def plot_sky_voronoi_2d(
     fig = plt.figure()
     ax = fig.add_subplot(111)
     clip_patch = patches.Circle((0, 0), radius=clip_radius, transform=ax.transData)
-    cnorm = plt.Normalize(vmin=-2, vmax=2)
+    cnorm = plt.Normalize(vmin=vmin, vmax=vmax)
     cmap = plt.cm.get_cmap("viridis")
     vor_plot_patches = []
     for i in range(len(vor.points)):
@@ -120,4 +128,10 @@ def plot_sky_voronoi_2d(
     ax.set_ylim(-clip_radius, clip_radius)
     ax.set_aspect("equal")
 
-    return fig, ax
+    # add colorbar to right of axes
+    cax = fig.add_axes([0.9, 0.1, 0.02, 0.8])
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=cnorm)
+    sm.set_array([])
+    cb = fig.colorbar(sm, cax=cax, orientation="vertical")
+
+    return fig, ax, cb
