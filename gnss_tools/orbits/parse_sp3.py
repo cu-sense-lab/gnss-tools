@@ -173,7 +173,7 @@ def format_position_and_clock(vehicle_id: str, x: float, y: float, z: float, clo
 
 @dataclass
 class SP3Record:
-    epoch: datetime
+    epoch: float
     p_entries: Dict[str, Optional[Tuple[float, float, float, float]]]
     v_entries: Dict[str, Optional[Tuple[float, float, float, float]]]
 
@@ -218,11 +218,17 @@ def format_records(records: List[SP3Record]) -> List[str]:
         formatted_lines.append(epoch_line)
         
         # Format the position entries
-        for veh_id, (x, y, z, c) in record.p_entries.items():
+        for veh_id, entry in record.p_entries.items():
+            if entry is None:
+                continue
+            (x, y, z, c) = entry
             position_line = f"P{format_position_and_clock(veh_id, x, y, z, c)}"
             formatted_lines.append(position_line)
             if veh_id in record.v_entries:
-                (vx, vy, vz, vc) = record.v_entries[veh_id]
+                entry = record.v_entries[veh_id]
+                if entry is None:
+                    continue
+                (vx, vy, vz, vc) = entry
                 velocity_line = f"V{format_position_and_clock(veh_id, vx, vy, vz, vc)}"
                 formatted_lines.append(velocity_line)
     

@@ -199,9 +199,15 @@ def compute_satellite_ecf_positions_from_cddis_sp3(
     elif times.dtype in [np.float64, np.int32, np.int64]:
         start_time = GPSTime.from_float_seconds(start_time_gpst)
         end_time = GPSTime.from_float_seconds(end_time_gpst)
+    else:
+        raise Exception("`times` must be of type GTIME_DTYPE or float/int array.")
     sp3_arrays = download_and_parse_sp3_data(start_time, end_time, data_dir)
+    if sp3_arrays is None:
+        raise ValueError("No SP3 data available")
     
     records = sp3_arrays.position
+    if records is None:
+        raise ValueError("No SP3 position data available")
     
     if sat_ids is None:
         sat_ids = records.keys()
