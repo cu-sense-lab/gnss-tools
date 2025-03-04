@@ -14,7 +14,7 @@ def q_mult(q1: np.ndarray, q2: np.ndarray) -> np.ndarray:
     x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
     y = w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2
     z = w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2
-    q = np.empty_like(q1)
+    q = np.zeros(w.shape + (4,))
     q[..., 0] = w
     q[..., 1] = x
     q[..., 2] = y

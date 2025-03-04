@@ -4,7 +4,7 @@ Date: 2025-01-02
 """
 
 from ftplib import FTP, FTP_TLS
-from typing import Tuple
+from typing import Optional, Tuple
 import requests
 import os.path
 
@@ -19,7 +19,7 @@ import subprocess
 from gnss_tools.time.gpst import GPSTime
 
 
-def format_filepath(filepath_expr: str, dt: datetime.datetime = None, **kwargs) -> str:
+def format_filepath(filepath_expr: str, dt: Optional[datetime.datetime] = None, **kwargs) -> str:
     """
     ------------------------------------------------------------------------
     `filepath_expr` -- a formattable string that defines the full filepath.
@@ -116,7 +116,7 @@ def decompress(filepath: str, output_filepath: str) -> bool:
         with gzip.open(filepath, "rb") as f_in:
             with open(output_filepath, "wb") as f_out:
                 shutil.copyfileobj(f_in, f_out)
-        return output_filepath
+        return True
     if filepath[-2:] in [".Z", ".z"]:
         # Unix compression; use uncompress
         res = subprocess.call("uncompress -f " + filepath, shell=True)
@@ -167,7 +167,7 @@ def cddis_download(
 def http_download(
         url_path: str,
         output_filepath: str,
-        auth: Tuple[str, str] = None
+        auth: Optional[Tuple[str, str]] = None
     ) -> bool:
     """Given URL to HTTP resource and a local output filepath, uses Python's
     `requests.get` to fetch HTTP resource and write to local disc.
@@ -188,3 +188,4 @@ def http_download(
     with open(output_filepath, "wb") as f:
         f.write(r.content)
     return True
+

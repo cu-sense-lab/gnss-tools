@@ -1467,7 +1467,7 @@ def create_default_obs_header() -> Header:
     system_code: str = ""
     program_name: str = ""
     run_by: str = ""
-    date: datetime = ""
+    date: datetime = datetime.now()
     marker_name: str = ""
     marker_number: str = ""
     marker_type: str = ""
@@ -1558,3 +1558,28 @@ def create_default_obs_header() -> Header:
         number_of_satellites=number_of_satellites,
         number_of_obs=number_of_obs,
     )
+
+
+
+
+def parse_rinex_file_epochs(f: io.TextIOWrapper) -> List[Tuple[datetime, int, int]]:
+    """
+    Parse RINEX file epochs from a file object.
+    This is useful for quickly determining the epochs in the file
+    """
+    epochs = []
+    for line in f:
+        if line.startswith("> "):
+            year = int(line[2:6])
+            month = int(line[7:9])
+            day = int(line[9:11])
+            hour = int(line[12:14])
+            minute = int(line[15:17])
+            second = float(line[20:29])
+            flag_1 = int(line[30:32])
+            flag_2 = int(line[33:35])
+            second, microsecond = divmod(second, 1)
+            microsecond = int(microsecond * 1e6)
+            epoch = datetime(year + 2000, month, day, hour, minute, int(second), microsecond)
+            epochs.append((epoch, flag_1, flag_2))
+    return epochs

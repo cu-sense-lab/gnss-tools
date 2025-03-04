@@ -167,7 +167,7 @@ def plot_sky_voronoi_2d(
     vor = scipy.spatial.Voronoi(xy)
     
     clip_patch = patches.Circle((0, 0), radius=clip_radius, transform=ax.transData)
-    cnorm = plt.Normalize(vmin=vmin, vmax=vmax)
+    cnorm = plt.Normalize(vmin=vmin, vmax=vmax)  # type: ignore
     cmap = plt.cm.get_cmap("viridis")
     vor_plot_patches = []
     for i in range(len(vor.points)):
@@ -296,6 +296,7 @@ def spherical_hist(
         elevations: np.ndarray,  # deg  (num_points,)
         azimuths: np.ndarray,  # deg  (num_points,)
         values: np.ndarray,  # (num_points, num_dims)
+        bin_vertices: Optional[np.ndarray] = None,
         icososphere_num_subdivisions: int = 2,
         icososphere_rotation: Optional[Rotation] = None,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -303,11 +304,16 @@ def spherical_hist(
     Returns:
         bin_vertices, bin_values, counts
     """
-    ico_vertices, _ = icososphere.generate_icososphere(icososphere_num_subdivisions)
-    if icososphere_rotation is not None:
-        ico_vertices = icososphere_rotation.apply(ico_vertices)
+    if bin_vertices is None:
+        bin_vertices, _ = icososphere.generate_icososphere(icososphere_num_subdivisions)
+        if icososphere_rotation is not None:
+            bin_vertices = icososphere_rotation.apply(bin_vertices)
+    else:
+        assert bin_vertices.shape[1] == 3
+    if bin_vertices is None:
+        raise ValueError("bin_vertices must be provided or generated.")
     
-    num_vertices = ico_vertices.shape[0]
+    num_vertices = bin_vertices.shape[0]
     num_points, num_dims = values.shape
     points = np.zeros((num_points, 3))
     theta = np.deg2rad(360 - azimuths)
@@ -315,8 +321,8 @@ def spherical_hist(
     points[:, 0] = np.cos(theta) * np.cos(phi)
     points[:, 1] = np.sin(theta) * np.cos(phi)
     points[:, 2] = np.sin(phi)
-    bin_values, counts = bin_3d(points, values, ico_vertices)
-    return ico_vertices, bin_values, counts
+    bin_values, counts = bin_3d(points, values, bin_vertices)
+    return bin_vertices, bin_values, counts
 
 
 from scipy.interpolate import RBFInterpolator
