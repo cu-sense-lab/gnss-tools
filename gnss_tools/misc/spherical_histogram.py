@@ -321,7 +321,8 @@ def spherical_hist(
     points[:, 0] = np.cos(theta) * np.cos(phi)
     points[:, 1] = np.sin(theta) * np.cos(phi)
     points[:, 2] = np.sin(phi)
-    bin_values, counts = bin_3d(points, values, bin_vertices)
+    mask = ~np.isnan(points).any(axis=1)
+    bin_values, counts = bin_3d(points[mask, :], values[mask, :], bin_vertices)
     return bin_vertices, bin_values, counts
 
 

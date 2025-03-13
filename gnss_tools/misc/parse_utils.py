@@ -27,8 +27,8 @@ def parse_pattern_info(
         match = pattern.match(str_)
         if match:
             parsed_info.append(match.groupdict())
-    if parse_datetime:
-        for i, info in enumerate(parsed_info):
+    for i, info in enumerate(parsed_info):
+        if parse_datetime:
             year = info.get("year")
             month = info.get("month")
             day = info.get("day")
@@ -43,8 +43,8 @@ def parse_pattern_info(
                 info["datetime"] = datetime(
                     int(year), int(month), int(day), int(hour), int(minute), int(second), int(microsecond)
                 )
-            if keep_original_str:
-                info[original_str_key] = str_list[i]
+        if keep_original_str:
+            info[original_str_key] = str_list[i]
     return parsed_info
 
 def sort_info_by_date(
