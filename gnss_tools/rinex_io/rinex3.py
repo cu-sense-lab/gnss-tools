@@ -1409,6 +1409,8 @@ class Dataset:
         for record_index, record in enumerate(observations):
             obs_epochs.append((record.epoch - GPS_EPOCH).total_seconds())
             for sat_id, obs_vals in record.transmitters.items():
+                if sat_id[0] not in system_obs_types:
+                    continue
                 obs_codes = system_obs_types[sat_id[0]]
                 if sat_id not in obs_arrays:
                     # When instantiating the obs_arrays entry for a new satellite, we need to create a list for each obs code, as well as for SSI and LLI flags when included
