@@ -1035,7 +1035,7 @@ def format_header(header: Header) -> List[str]:
 class EpochRecord:
     epoch: datetime
     epoch_flag: int
-    transmitters: Dict[str, List[float | Tuple[float, float] | Tuple[float, float, float]]]  # transmitter_id -> (obs_values, ...)
+    transmitters: Dict[str, List[float | Tuple[float, int, int]]]  # transmitter_id -> (obs_values, ...)
 
 
 def parse_epoch_header(
@@ -1078,7 +1078,7 @@ def parse_transmitter_observations(
     parse_ssi: bool,
     parse_lli: bool,
     strict: bool = True,
-) -> Tuple[str, List[float]]:
+) -> Tuple[str, List[float | Tuple[float, int, int]]]:
     # if `parse_ssi` or `parse_lli` is True, carrier observations ("L" obs. code) are
     # expected to have tuples (Tuple[float, int, int]) for their corresponding
     # observation value, denoting the carrier observation value and corresponding
@@ -1116,7 +1116,13 @@ def parse_transmitter_observations(
         obs_val_str = line[i0:i1].strip()
         obs_val = float("nan")
         if obs_val_str:
-            obs_val = float(obs_val_str)
+            try:
+                obs_val = float(obs_val_str)
+            except ValueError:
+                if strict:
+                    raise ValueError(f"Error parsing observation value for {sat_id} at index {i0}: {obs_val_str}")
+                logging.warning(f"When parsing observation value for {sat_id} at index {i0}: {obs_val_str}")
+                # assert(False)
             if obs_code[0] == "L":
                 ssi = DEFAULT_SSI_VALUE
                 lli = DEFAULT_LLI_VALUE
@@ -1163,7 +1169,7 @@ def parse_observations(
     records: List[EpochRecord] = []
 
     current_record: Optional[EpochRecord] = None
-    num_sats: Optional[int] = None
+    num_sats: int = 0
 
     for line in input:
         if line.startswith(">"):
@@ -1224,7 +1230,7 @@ def format_observations(
                 obs_code = obs_codes[i]
                 if obs_code[0] == "L":
                     # if format_ssi or format_lli are true, we enforce length-3 obs values
-                    if len(obs_val) != 3:
+                    if not isinstance(obs_val, tuple) or len(obs_val) != 3:
                         raise ValueError(
                             f"Expected length-3 observation value (since `format_ssi` and/or `format_lli` is true) for {sat_id} at index {i}"
                         )
@@ -1264,7 +1270,7 @@ def parse_observations_into_observation_arrays(
 ) -> None:
 
     currently_parsing_record: bool = False
-    num_sats: Optional[int] = None
+    num_sats: int = 0
 
     # keep track of obs index for each sat
     current_sat_index = {}
@@ -1312,7 +1318,7 @@ def parse_observations_into_observation_arrays(
             obs_types = system_obs_types[system_letter]
             sat_index = current_sat_index[sat_id]
             for obs_id, obs_val in zip(obs_types, obs_vals):
-                observation_arrays[sat_id][obs_id][sat_index] = obs_val
+                observation_arrays.records[sat_id][obs_id][sat_index] = obs_val
             current_sat_index[sat_id] -= 1
 
             num_sats -= 1
@@ -1358,6 +1364,7 @@ class Dataset:
     def load_files(self, filepaths: List[str], strict: bool = True) -> "Dataset":
         for filepath in filepaths:
             with open(filepath, "r") as f:
+                print(filepath)
                 self.load(f, strict)
         self._filepaths += filepaths
         return self
@@ -1384,12 +1391,16 @@ class Dataset:
             obs_arrays: dict of satellite ID to dict of observation code to numpy array of observation values
         """
 
-        obs_epochs: List[int] = []
+        obs_epochs: List[float] = []
         obs_arrays: Dict[str, Dict[str, List[float]]] = {}
         # file_tracer: Dict[str, Dict[str, List[float]]] = {}
 
         GPS_EPOCH = datetime(1980, 1, 6, 0, 0, 0)
 
+        if self.header is None:
+            raise ValueError("Cannot get observation arrays without header")
+        if self.epoch_records is None:
+            raise ValueError("Cannot get observation arrays without observations")
         system_obs_types = self.header.system_obs_types
 
         # Iterate through each record and append values to the obs_arrays dict
@@ -1428,18 +1439,18 @@ class Dataset:
                 for obs_index, obs_code in enumerate(obs_codes):
                     if obs_code[0] == "L":
                         assert(isinstance(obs_vals[obs_index], tuple))
-                        assert(len(obs_vals[obs_index]) == 3)
-                        obs_val, ssi, lli = obs_vals[obs_index]
+                        assert(len(obs_vals[obs_index]) == 3)  # type: ignore
+                        obs_val, ssi, lli = obs_vals[obs_index]  # type: ignore
                         obs_arrays[sat_id][obs_code].append(obs_val)
                         if self._include_ssi:
                             obs_arrays[sat_id][obs_code + "_SSI"].append(ssi)
                         if self._include_lli:
                             obs_arrays[sat_id][obs_code + "_LLI"].append(lli)
                     else:
-                        obs_arrays[sat_id][obs_code].append(obs_vals[obs_index])
+                        obs_arrays[sat_id][obs_code].append(obs_vals[obs_index])  # type: ignore
 
         # Convert lists to numpy arrays
-        obs_epochs = np.array(obs_epochs)
+        obs_epochs_arr = np.array(obs_epochs)
         for sat_id, obs_dict in obs_arrays.items():
             for obs_code, obs_vals in obs_dict.items():
                 val_arr = np.array(obs_vals)
@@ -1450,7 +1461,7 @@ class Dataset:
                 if np.all(np.isnan(obs_dict[obs_code])):
                     del obs_dict[obs_code]
         
-        return RINEX_ObservationArrays(obs_epochs, obs_arrays)
+        return RINEX_ObservationArrays(obs_epochs_arr, obs_arrays)
 
         # create dict of sat ID
         # each has obs to value lists for each obs code
