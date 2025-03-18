@@ -24,7 +24,10 @@ from .gtime import (
     interpolate_gtime,
 )
 
-from .julian import datetime_to_julian
+from .julian import (
+    days_since_j2000,
+    datetime_to_julian_day,
+)
 
 from .leap_seconds import OffsetEpoch, NTP_EPOCH, LEAP_SECOND_EPOCHS
 
