@@ -1364,7 +1364,7 @@ class Dataset:
     def load_files(self, filepaths: List[str], strict: bool = True) -> "Dataset":
         for filepath in filepaths:
             with open(filepath, "r") as f:
-                print(filepath)
+                # print(filepath)
                 self.load(f, strict)
         self._filepaths += filepaths
         return self
