@@ -49,3 +49,17 @@ def nan_polydetrend(x: np.ndarray, y: np.ndarray, deg: int = 1) -> np.ndarray:
     # Detrend the data
     y_detrended = y - trend
     return y_detrended
+
+def nan_filtfilt(b, a, x: np.ndarray) -> np.ndarray:
+    """
+    Apply a filter to the data x, ignoring NaN values.
+    """
+    import scipy.signal
+    # Create a mask for non-NaN values
+    mask = ~np.isnan(x)
+    # Apply the filter
+    result = np.empty_like(x)
+    result[mask] = scipy.signal.filtfilt(b, a, x[mask])
+    # Fill NaN values with NaN
+    result[~mask] = np.nan
+    return result
