@@ -3,13 +3,13 @@ Author Brian Breitsch
 Date: 2025-01-02
 """
 
-from gnss_tools.misc.data_utils import format_filepath, http_download
+from gnss_lib.misc.data_utils import format_filepath, http_download
 import requests
 import os
 import logging
 from datetime import datetime
 from typing import List, Tuple, Optional
-import gnss_tools.rinex_io.rinex3 as rinex3
+import gnss_lib.rinex_io.rinex3 as rinex3
 import hatanaka
 
 
@@ -26,7 +26,8 @@ else:
 
 DATA_DIR = os.getenv("DATA_DIR")
 if DATA_DIR is None:
-    logging.warning("DATA_DIR not set")
+    logging.warning("DATA_DIR not set; using working directory")
+    DATA_DIR = "./"
 
 def get_cddis_rinex3_file_list(
     dt: datetime, auth: Optional[Tuple[str, str]] = None
@@ -48,7 +49,7 @@ def _download_station_data_for_day(
         station_ids: List[str],
         overwrite: bool = False,
         data_dir: str = DATA_DIR,
-) -> dict[str, list[str]]:
+) -> dict[str, str]:
     relevant_rinex3_filenames: dict[str, str] = {}  # station_id -> filename
     file_names, file_sizes = get_cddis_rinex3_file_list(day, auth=EARTHDATA_AUTH)
     for station_id in station_ids:
@@ -56,7 +57,7 @@ def _download_station_data_for_day(
             if fname.startswith(station_id):
                 relevant_rinex3_filenames[station_id] = fname
 
-    rinex3_zipped_filepaths: dict[datetime, dict[str, str]] = {}
+    rinex3_zipped_filepaths: dict[str, str] = {}
     for station_id, filename in relevant_rinex3_filenames.items():
         rinex3_archive_path = format_filepath(RINEX3_ARCHIVE_PATH_TEMPLATE, day)
         url = os.path.join(CDDIS_ARCHIVE_URL, rinex3_archive_path, filename)

@@ -4,7 +4,7 @@ Date: 2025-01-02
 """
 
 from dataclasses import dataclass
-from typing import Any, Tuple, Union
+from typing import Any, Tuple, Type, TypeVar, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -193,9 +193,9 @@ class GTime:
             return cls(whole_seconds, frac_seconds)
 
 
-    
+    T = TypeVar("T", bound="GTime")
     @classmethod
-    def from_float_seconds(cls, seconds: float) -> "GTime":
+    def from_float_seconds(cls: Type[T], seconds: float) -> T:
         whole_seconds = int(seconds)
         frac_seconds = seconds - whole_seconds
         if frac_seconds < 0.0:
@@ -205,7 +205,7 @@ class GTime:
     
     
     @classmethod
-    def from_integer_milliseconds(cls, milliseconds: int) -> "GTime":
+    def from_integer_milliseconds(cls: Type[T], milliseconds: int) -> T:
         whole_seconds = int(milliseconds // 1000)
         frac_seconds = (milliseconds - 1000 * whole_seconds) * 0.001
         if frac_seconds < 0.0:
@@ -217,7 +217,7 @@ class GTime:
 
     ## Array methods
     @classmethod
-    def from_float_seconds_array(cls, seconds: npt.NDArray) -> npt.NDArray:
+    def from_float_seconds_array(cls: Type[T], seconds: npt.NDArray) -> npt.NDArray:
         """
         Converts an array of floats representing seconds into a numpy array with GTIME_DTYPE.
         """
@@ -227,7 +227,7 @@ class GTime:
         return outputs
 
     @classmethod
-    def from_tick_count_array_with_integer_rate(cls, tick_counts: npt.NDArray, ticks_per_second: int) -> npt.NDArray:
+    def from_tick_count_array_with_integer_rate(cls: Type[T], tick_counts: npt.NDArray, ticks_per_second: int) -> npt.NDArray:
         """
         Computes the time that the given tick count represents at the given rate.
         Returns a numpy array of GTIME dtype representing the times.

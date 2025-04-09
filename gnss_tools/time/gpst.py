@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, timezone
 from .leap_seconds import utc_tai_offset
 from .gtime import GTIME_DTYPE, GTime
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Iterable, List, Optional, Tuple
 
 
 GPS_EPOCH = datetime(year=1980, month=1, day=6, hour=0, minute=0, second=0, tzinfo=timezone.utc)
@@ -28,8 +28,16 @@ def convert_gps_seconds_to_datetime(gps_seconds: float) -> datetime:
     microseconds = (gps_seconds % 1) * 1e6
     return GPS_EPOCH + timedelta(seconds=gps_seconds, microseconds=microseconds) \
               - GPS_TAI_OFFSET + utc_tai_offset(GPS_EPOCH)
-    
 
+
+def convert_datetime_array_to_gps_seconds_array(dt_array: Iterable[datetime]) -> np.ndarray:
+    return np.array([convert_datetime_to_gps_seconds(dt) for dt in dt_array], dtype=np.float64)
+
+def convert_gps_seconds_array_to_datetime64_array(gps_seconds_array: Iterable[float]) -> np.ndarray:
+    return np.array([convert_gps_seconds_to_datetime(gpst) for gpst in gps_seconds_array], dtype=np.datetime64)
+
+def convert_gps_seconds_to_datetime_list(gps_seconds_array: Iterable[float]) -> List[datetime]:
+    return [convert_gps_seconds_to_datetime(gpst) for gpst in gps_seconds_array]
 
 
 @dataclass(slots=True)

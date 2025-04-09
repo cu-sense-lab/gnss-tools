@@ -10,8 +10,13 @@ def generate_icososphere(
 ) -> Tuple[np.ndarray, np.ndarray]:  # vertices (N, 3), faces (M, 3)
     """
     Stolen from: http://blog.andreaskahler.com/2009/06/creating-icosphere-mesh-in-code.html
+
+    Returns:
+    vertices: (N, 3) array of vertex positions
+    faces: (M, 3) array of face indices
     """
     t = (1.0 + np.sqrt(5.0)) / 2.0
+    icosohedron_vertices = np.array([
     icosohedron_vertices = np.array([
         [-1,  t,  0],
         [ 1,  t,  0],
@@ -70,17 +75,19 @@ def generate_icososphere(
         E = 30
         F = 20
         for _ in range(num_subdivisions):
-            V, E, F = 2 * E - F + 2, 2 * E + 3 * F, 4 * F
+            F = 4 * F
+            E = 4 * E
+            V = E - F + 2
+            # V, E, F = 2 * E - F + 2, 2 * E + 3 * F, 4 * F
         return V, E, F
     
     N_vertices, N_edges, N_faces = get_icososphere_VEF(num_subdivisions)
-    
     vertices = np.zeros((N_vertices, 3))
 
     _curr_vertex_idx = 0
     def add_vertex(v: np.ndarray) -> int:
         nonlocal _curr_vertex_idx
-        if _curr_vertex_idx >= N_vertices:
+        if _curr_vertex_idx >= vertices.shape[0]:
             raise ValueError(f"Tried to add too many vertices: {_curr_vertex_idx} >= {N_vertices}")
         vertices[_curr_vertex_idx] = v
         _curr_vertex_idx += 1

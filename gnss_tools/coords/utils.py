@@ -10,6 +10,10 @@ import numpy as np
 from gnss_tools.time.gmst import gpst2gmst, gpst2gmst_vec
 from numpy.typing import NDArray
 
+WGS84_rf = 298.257223563  # Reciprocal flattening (1/f)
+WGS84_a = 6378137.0  # Earth semi-major axis (m)
+WGS84_b = WGS84_a - WGS84_a / WGS84_rf  # Earth semi-minor axis derived from f = (a - b) / a
+
 
 def make_3_tuple_array(arr: np.ndarray):
     """
@@ -37,29 +41,28 @@ def dms2deg(arr: np.ndarray):
     arr = make_3_tuple_array(arr)
     return (
         np.sign(arr[:, 0]) * (abs(arr[:, 0]) + arr[:, 1] / 60.0 + arr[:, 2] / 3600.0)
-    ).squeeze()
+    )
 
 
 def ecf2geo(
     x_ref: NDArray[np.float64],
-    timeout: Optional[int] = None,
-    return_ROC: bool = False,
+    max_iterations: int = 10,
+    a: float = WGS84_a,
+    b: float = WGS84_b,
     tolerance: float = 1e-10,
-):
+) -> np.ndarray | Tuple[np.ndarray, np.ndarray]:
     """Converts ecf coordinates to geodetic coordinates,
 
     Parameters
     ----------
     x_ref : an ndarray of N ecf coordinates with shape (N,3).
-    timeout : iterations will end when timeout goes to zero.
-    return_ROC : whether to return optional output `N` (radius of curvature)
+    max_iterations : the maximum number of iterations to use in the iterative solution
 
     Returns
     -------
     output : (N,3) ndarray
         geodetic coordinates in degrees and meters (lon, lat, alt)
-    `N` : (optional) the radius of curvature, passed in as output parameter
-
+    
     Notes
     -----
     >>> from numpy import array, radians
@@ -80,13 +83,7 @@ def ecf2geo(
     [451.176, -4906.978, 4035.946]
     """
     x_ref = make_3_tuple_array(x_ref)
-    # we = 7292115*1**-11 # Earth angular velocity (rad/s)
-    # c = 299792458    # Speed of light in vacuum (m/s)
-    rf = 298.257223563  # Reciprocal flattening (1/f)
-    a = 6378137.0  # Earth semi-major axis (m)
-    b = a - a / rf  # Earth semi-minor axis derived from f = (a - b) / a
-    if x_ref.shape == (3,):
-        x_ref = x_ref.reshape((1, 3))
+
     x = x_ref[:, 0]
     y = x_ref[:, 1]
     z = x_ref[:, 2]
@@ -98,7 +95,9 @@ def ecf2geo(
     # h = z / np.sin(lat) if numpy.any(abs(lat) > tolerance) else 0 * lat
     d_h = 1.0
     d_lat = 1.0
-    while (d_h > tolerance) and (d_lat > tolerance):
+    for i in range(max_iterations):
+        if (d_h < tolerance) and (d_lat < tolerance):
+            break
         N = a**2 / (np.sqrt(a**2 * np.cos(lat) ** 2 + b**2 * np.sin(lat) ** 2))
         N1 = N * (b / a) ** 2
 
@@ -109,23 +108,17 @@ def ecf2geo(
 
         h = temp_h
         lat = temp_lat
-        if timeout is not None:
-            timeout -= 1
-            if timeout <= 0:
-                break
 
     lon = np.arctan2(y, x)
 
     lon = np.degrees(lon)
     lat = np.degrees(lat)
 
-    geo = np.column_stack((lon, lat, h)).squeeze()
-    if return_ROC:
-        return geo, N
+    geo = np.column_stack((lon, lat, h))
     return geo
 
 
-def local_enu(lat: float, lon: float):
+def local_enu(lat: np.ndarray, lon: np.ndarray) -> np.ndarray:
     Rl = np.array(
         [
             [
@@ -143,7 +136,9 @@ def local_enu(lat: float, lon: float):
 def ecf2enu(
     x_ref: NDArray[np.float64],
     x_obj: NDArray[np.float64],
-    timeout: Optional[int] = None,
+    a: float = WGS84_a,
+    b: float = WGS84_b,
+    max_iterations: int = 10,
 ):
     """Converts satellite ecf coordinates to user-relative ENU coordinates.
 
@@ -153,8 +148,8 @@ def ecf2enu(
         observer ecf coordinate
     x_obj : ndarray of shape(N,3)
         object ecf coordinates
-    timeout : int
-        timeout integer, passed to ecf2geo
+    max_iterations : int
+        maximum number of iterations, passed to ecf2geo
 
     Returns
     -------
@@ -164,7 +159,7 @@ def ecf2enu(
     x_ref = make_3_tuple_array(x_ref)
     x_obj = make_3_tuple_array(x_obj)
     # get the lat and lon of the user position
-    geo = ecf2geo(x_ref, timeout=timeout)
+    geo = ecf2geo(x_ref, max_iterations=max_iterations, a=a, b=b)
     geo = make_3_tuple_array(geo)
     lon = np.radians(geo[:, 0])
     lat = np.radians(geo[:, 1])
@@ -174,7 +169,6 @@ def ecf2enu(
     Rl = local_enu(lat, lon)
     dx = x_obj - x_ref
     return np.sum(Rl * dx.T[None, :, :], axis=1).T  # sum across columns
-    # return Rl.dot(dx.T).T.squeeze()
 
 
 def enu2sky(enu: NDArray[np.float64]):
@@ -198,7 +192,34 @@ def enu2sky(enu: NDArray[np.float64]):
     az = np.arctan2(e, n)
     r = np.sqrt(e**2 + n**2 + u**2)
     el = np.arcsin(u / r)
-    return np.column_stack((np.degrees(az), np.degrees(el), r)).squeeze()
+    return np.column_stack((np.degrees(az), np.degrees(el), r))
+
+
+def xyz2sky(xyz: NDArray[np.float64]):
+    """Converts XYZ coordinates to azimuth, elevation, and radius
+    The Z axis is defined to be the direction of the observer's zenith.
+    Azimuth is measured counterclockwise from the X axis, which is
+    defined to be the direction of the observer's meridian.
+
+    Parameters
+    ----------
+    xyz : ndarray of shape(N,3)
+        XYZ coordinates
+
+    Returns
+    -------
+    output : ndarray of shape(N,3)
+        The spherical coordinates
+        (azimuth, elevation, radius) in degrees and meters
+    """
+    # xyz = make_3_tuple_array(xyz)
+    x = xyz[..., 0]
+    y = xyz[..., 1]
+    z = xyz[..., 2]
+    az = np.arctan2(y, x)
+    r = np.sqrt(x**2 + y**2 + z**2)
+    el = np.arcsin(z / r)
+    return np.stack((np.degrees(az), np.degrees(el), r), axis=-1)
 
 
 def sky2enu(sky: NDArray[np.float64]):
@@ -211,13 +232,15 @@ def sky2enu(sky: NDArray[np.float64]):
     e = r * np.cos(theta) * np.cos(phi)
     n = r * np.sin(theta) * np.cos(phi)
     u = r * np.sin(phi)
-    return np.column_stack((e, n, u)).squeeze()
+    return np.column_stack((e, n, u))
 
 
 def ecf2sky(
     x_ref: NDArray[np.float64],
     x_obj: NDArray[np.float64],
-    timeout: Optional[int] = None,
+    a: float = WGS84_a,
+    b: float = WGS84_b,
+    max_iterations: int = 10,
 ):
     """Converts user and satellite ecf coordinates to azimuth and elevation
     from user on Earth, by first computing their relative ENU coordinates.  See `enu2sky`.
@@ -228,7 +251,8 @@ def ecf2sky(
         observer coordinate
     xs : ndarray of shape(N,3)
         object coordinates
-    timeout: timout integer--passed to ecf2enu
+    max_iterations: int
+        maximum number of iterations; passed to ecf2enu
 
     Returns
     -------
@@ -236,12 +260,93 @@ def ecf2sky(
         The objects' sky coordinatescoordinates
         (azimuth, elevation, radius)  in degrees and meters
     """
-    enu = ecf2enu(x_ref, x_obj, timeout=timeout)
+    enu = ecf2enu(x_ref, x_obj, max_iterations=max_iterations, a=a, b=b)
     return enu2sky(enu)
 
 
+
+def meridional_radius_of_curvature(lat: float, a: float = WGS84_a, b: float = WGS84_b) -> float:
+    """
+    Compute the meridional (north-south) radius of curvature.
+
+    Parameters
+    ----------
+    lat : float
+        Geodetic latitude (degrees)
+    a : float
+        Earth semi-major axis (m)
+    b : float
+        Earth semi-minor axis (m)
+
+    Returns
+    -------
+    M : float
+        Meridional radius of curvature (m)
+    """
+    lat_rad = np.radians(lat)
+    ecc2 = (a**2 - b**2) / a**2
+    M = a * (1 - ecc2) / (1 - ecc2 * np.sin(lat_rad)**2) ** (3 / 2)
+    return M
+
+
+
+def normal_radius_of_curvature(lat: float, a: float = WGS84_a, b: float = WGS84_b) -> float:
+    """
+    Compute the normal (west-east) radius of curvature.
+
+    Parameters
+    ----------
+    lat : float
+        Geodetic latitude (degrees)
+    a : float
+        Earth semi-major axis (m)
+    b : float
+        Earth semi-minor axis (m)
+    
+    Returns
+    -------
+    N : float
+        Normal radius of curvature (m)
+    """
+    lat_rad = np.radians(lat)
+    ecc2 = (a**2 - b**2) / a**2
+    N = a / np.sqrt(1 - ecc2 * np.sin(lat_rad)**2)
+    return N
+
+
+def radius_of_curvature(lat: float, az: float, a: float = WGS84_a, b: float = WGS84_b) -> float:
+    """
+    Compute the radius of curvature in a given direction, considering
+    the meridional and normal directions.
+
+    Parameters
+    ----------
+    lat : float
+        Geodetic latitude (degrees)
+    az : float
+        Azimuth angle (degrees CW from north) from the curvature direction
+    a : float
+        Earth semi-major axis (m)
+    b : float
+        Earth semi-minor axis (m)
+    
+    Returns
+    -------
+    R : float
+        Radius of curvature (m)
+    """
+    az_rad = np.radians(az)
+    M = meridional_radius_of_curvature(lat, a, b)
+    N = normal_radius_of_curvature(lat, a, b)
+    R = (M * N) / (M * np.sin(az_rad)**2 + N * np.cos(az_rad)**2)
+    return R
+
+
 def local_radius_of_curvature(geo: NDArray[np.float64]):
-    """Returns local radius of curvature given geodetic coordinates."""
+    """
+    Returns local (north-south) radius of curvature given geodetic coordinates.
+    Deprecated: Use `meridional_radius_of_curvature` instead.
+    """
     geo = make_3_tuple_array(geo)
     a = 6378137.0  # Earth semi-major axis (m)
     rf = 298.257223563  # Reciprocal flattening (1/f)
@@ -255,7 +360,7 @@ def local_radius_of_curvature(geo: NDArray[np.float64]):
     return N1
 
 
-def geo2ecf(geo):
+def geo2ecf(geo: NDArray[np.float64], a: float = WGS84_a, b: float = WGS84_b):
     """Converts geodetic coordinates to ecf coordinates
 
     Parameters
@@ -272,9 +377,6 @@ def geo2ecf(geo):
     -----
     """
     geo = make_3_tuple_array(geo)
-    a = 6378137.0  # Earth semi-major axis (m)
-    rf = 298.257223563  # Reciprocal flattening (1/f)
-    b = a * (rf - 1) / rf  # Earth semi-minor axis derived from f = (a - b) / a
     lon = np.radians(geo[:, 0])
     lat = np.radians(geo[:, 1])
     h = geo[:, 2]
@@ -287,10 +389,10 @@ def geo2ecf(geo):
     z = (N1 + h) * np.sin(lat)
 
     x_ref = np.column_stack((x, y, z))
-    return x_ref.squeeze()
+    return x_ref
 
 
-def geo2sky(geo_ref: NDArray[np.float64], geo_obj: NDArray[np.float64]):
+def geo2sky(geo_ref: NDArray[np.float64], geo_obj: NDArray[np.float64], a: float = WGS84_a, b: float = WGS84_b):
     """Converts object geodetic coordinates to azimuth and elevation from
     reference geodetic coordinates on Earth by first computing their relative
     Sky coordinates.  See `enu2sky`.
@@ -309,8 +411,8 @@ def geo2sky(geo_ref: NDArray[np.float64], geo_obj: NDArray[np.float64]):
     """
     geo_ref = make_3_tuple_array(geo_ref)
     geo_obj = make_3_tuple_array(geo_obj)
-    x_ref = geo2ecf(geo_ref)
-    x_obj = geo2ecf(geo_obj)
+    x_ref = geo2ecf(geo_ref, a=a, b=b)
+    x_obj = geo2ecf(geo_obj, a=a, b=b)
     return ecf2sky(x_ref, x_obj)
 
 
@@ -319,6 +421,7 @@ def eci2ecf(
     r_eci: np.ndarray,
     v_eci: Optional[np.ndarray] = None,
     gtime_dtype: bool = False,
+    dtheta: float = 7.29211585275553e-005,
 ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     """
     Converts ECI coordinates to ECF coordinates given the set of coordinates and coordinate times
@@ -355,7 +458,7 @@ def eci2ecf(
     r_ecf = np.sum(R * r_eci.T[None, :, :], axis=1).T
 
     if v_eci is not None:
-        dtheta = 7.29211585275553e-005  # Earth rotation [rad/s]
+        # dtheta = 7.29211585275553e-005  # Earth rotation [rad/s]
         Rdot = (
             np.array(
                 [
@@ -383,6 +486,7 @@ def ecf2eci(
     r_ecf: np.ndarray,
     v_ecf: Optional[np.ndarray] = None,
     gtime_dtype: bool = False,
+    dtheta: float = 7.29211585275553e-005,
 ) -> np.ndarray:
     """Converts ecf coordinates to eci coordinates given
     the time or times for said coordinates
@@ -419,7 +523,7 @@ def ecf2eci(
     r_eci = np.sum(R * r_ecf.T[None, :, :], axis=1).T  # sum across columns
 
     if v_ecf is not None:
-        dtheta = 7.29211585275553e-005  # Earth rotation [rad/s]
+        # dtheta = 7.29211585275553e-005  # Earth rotation [rad/s]
         Rdot = (
             np.array(
                 [
@@ -442,7 +546,7 @@ def ecf2eci(
         return r_eci
 
 
-def rotate_pos_ecf(pos_ecf: np.ndarray, tau: float):
+def rotate_pos_ecf(pos_ecf: np.ndarray, tau: float, Omega_E_dot: float = 7.2921151467e-5) -> np.ndarray:
     """
     Rotates ECF position around the polar axis by `tau` times Earth's rotation rate
 
@@ -456,7 +560,7 @@ def rotate_pos_ecf(pos_ecf: np.ndarray, tau: float):
     r_rot : array of shape (3,); the rotated position coordinates
 
     """
-    Omega_E_dot = 7.2921151467e-5
+    # Omega_E_dot = 7.2921151467e-5
     theta = Omega_E_dot * tau
     if np.isscalar(theta):
         theta = np.array([theta])
@@ -470,4 +574,4 @@ def rotate_pos_ecf(pos_ecf: np.ndarray, tau: float):
         ]
     )
     pos_rot: np.ndarray = (R * pos_ecf.T[None, :, :]).sum(axis=1).T
-    return pos_rot.squeeze()
+    return pos_rot
