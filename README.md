@@ -1,4 +1,13 @@
-# gnss-tools
+# LibGNSS for Python
+A suite of utilities for GNSS including:
 
-A set of tools for GNSS data processing
+- coordinate and time conversion
+- orbit propagation
+- signal generation
+- SP3
+- RINEX
 
+and more!
+
+Author: Brian Breitsch
+2023-01-09
