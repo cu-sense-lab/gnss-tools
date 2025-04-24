@@ -104,8 +104,8 @@ def elements_from_state_vector(
 
 @numba.njit
 def numba_elements_from_state_vector(
-        r: numba.float64[:],
-        v: numba.float64[:],
+        r: numba.float64[:],  # type: ignore
+        v: numba.float64[:],  # type: ignore
         mu: float,
         SMALL_NUMBER: float
     ) -> Tuple[float, float, float, float, float, float]:
@@ -127,11 +127,11 @@ def numba_elements_from_state_vector(
     if abs(i) < SMALL_NUMBER:
         # For non-inclined orbits, raan is undefined;
         # set to zero by convention
-        raan = 0
+        raan = 0.0
         if abs(e) < SMALL_NUMBER:
             # For circular orbits, place periapsis
             # at ascending node by convention
-            arg_pe = 0
+            arg_pe = 0.0
         else:
             # Argument of periapsis is the angle between
             # eccentricity vector and its x component.
@@ -141,7 +141,7 @@ def numba_elements_from_state_vector(
         # between the node vector and its x component.
         raan = np.arccos(n[0] / norm(n))
         if n[1] < 0:
-            raan = 2 * pi - raan
+            raan = 2.0 * pi - raan
 
         # Argument of periapsis is angle between
         # node and eccentricity vectors.
@@ -153,26 +153,26 @@ def numba_elements_from_state_vector(
             # vector and its x component.
             f = np.arccos(r[0] / norm(r))
             if v[0] > 0:
-                f = 2 * pi - f
+                f = 2.0 * pi - f
         else:
             # True anomaly is angle between node
             # vector and position vector.
             f = np.arccos(dot(n, r) / (norm(n) * norm(r)))
             if dot(n, v) > 0:
-                f = 2 * pi - f
+                f = 2.0 * pi - f
     else:
         if ev[2] < 0:
-            arg_pe = 2 * pi - arg_pe
+            arg_pe = 2.0 * pi - arg_pe
 
         # True anomaly is angle between eccentricity
         # vector and position vector.
         f = np.arccos(dot(ev, r) / (norm(ev) * norm(r)))
 
         if dot(r, v) < 0:
-            f = 2 * pi - f
+            f = 2.0 * pi - f
 
     # semi-maj axis, eccentricity, inclination, right-angle of ascending node, arg. perigee, true anomaly
-    return (a, e, i, raan, arg_pe, f)
+    return (a, e, i, raan, arg_pe, f)  # type: ignore
 
 
 

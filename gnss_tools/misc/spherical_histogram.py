@@ -326,6 +326,15 @@ def spherical_hist(
     return bin_vertices, bin_values, counts
 
 
+
+    # points = np.zeros((num_points, 3))
+    # theta = np.deg2rad(360 - azimuths)
+    # phi = np.deg2rad(elevations)
+    # points[:, 0] = np.cos(theta) * np.cos(phi)
+    # points[:, 1] = np.sin(theta) * np.cos(phi)
+    # points[:, 2] = np.sin(phi)
+    # closest_vertices = find_closest_vertex(bin_points, points)
+
 from scipy.interpolate import RBFInterpolator
 
 def get_azimuth_elevation_icososphere_interpolator(

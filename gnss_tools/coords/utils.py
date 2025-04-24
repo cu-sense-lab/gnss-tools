@@ -485,9 +485,9 @@ def ecf2eci(
     time_gpst_arr: np.ndarray,
     r_ecf: np.ndarray,
     v_ecf: Optional[np.ndarray] = None,
-    gtime_dtype: bool = False,
+    is_gtime_dtype: bool = False,
     dtheta: float = 7.29211585275553e-005,
-) -> np.ndarray:
+) -> np.ndarray | Tuple[np.ndarray, np.ndarray]:
     """Converts ecf coordinates to eci coordinates given
     the time or times for said coordinates
 
@@ -507,7 +507,7 @@ def ecf2eci(
     See: http://physics.stackexchange.com/questions/98466/radians-to-rotate-earth-to-match-eci-lat-lon-with-ecf-lat-lon
     Time of 2000 January 1, 12 UTC is (in GPS seconds) 630763213.0
     """
-    gmst = gpst2gmst_vec(time_gpst_arr, gtime_dtype=gtime_dtype)
+    gmst = gpst2gmst_vec(time_gpst_arr, gtime_dtype=is_gtime_dtype)
     gmst_hour = gmst % 24
     theta = 2 * np.pi * gmst_hour / 24
     shp = theta.shape
