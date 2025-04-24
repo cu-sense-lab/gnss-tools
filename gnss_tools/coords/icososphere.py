@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Dict, Tuple
 import numpy as np
 
 
@@ -16,6 +16,7 @@ def generate_icososphere(
     faces: (M, 3) array of face indices
     """
     t = (1.0 + np.sqrt(5.0)) / 2.0
+    icosohedron_vertices = np.array([
     icosohedron_vertices = np.array([
         [-1,  t,  0],
         [ 1,  t,  0],
@@ -91,14 +92,14 @@ def generate_icososphere(
         vertices[_curr_vertex_idx] = v
         _curr_vertex_idx += 1
         return _curr_vertex_idx - 1
-    
-    vertices[:12] = icosohedron_vertices
-    _curr_vertex_idx = 12
-    
-    middle_point_cache = {} # (i, j) -> k  the index of the middle point of edge i-j
+    for v in icosohedron_vertices:
+        add_vertex(v)
+
+    # (i, j) -> k  the index of the middle point of edge i-j
+    middle_point_cache: Dict[Tuple[int, int], int] = {}
     
     current_faces = icosohedron_faces
-
+    
     def get_middle_point(i: int, j: int) -> int:
         if i > j:
             i, j = j, i
