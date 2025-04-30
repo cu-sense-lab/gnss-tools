@@ -17,7 +17,6 @@ def generate_icososphere(
     """
     t = (1.0 + np.sqrt(5.0)) / 2.0
     icosohedron_vertices = np.array([
-    icosohedron_vertices = np.array([
         [-1,  t,  0],
         [ 1,  t,  0],
         [-1, -t,  0],
