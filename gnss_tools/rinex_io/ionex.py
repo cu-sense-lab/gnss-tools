@@ -200,7 +200,7 @@ class Header:
 
         ionex_version: Optional[str] = None
         ionex_type: Optional[str] = None
-        ionex_model: Optional[IonexModel] = None
+        ionex_model: IonexModel = IonexModel.UNKNOWN
         ionex_program: Optional[str] = None
         run_by: Optional[str] = None
         run_date: Optional[datetime] = None
@@ -271,11 +271,18 @@ class Header:
                 run_by = line[20:40].strip()
                 run_date_str = line[40:60].strip()
                 if run_date_str:
-                    try:
-                        run_date = datetime.strptime(run_date_str, "%y %m %d %H %M %S")
-                    except ValueError:
+                    DATETIME_FORMAT_STRINGS = [
+                        "%y %m %d %H %M %S",
+                        "%d-%b-%y %H:%M",
+                    ]
+                    run_date = None
+                    for format_string in DATETIME_FORMAT_STRINGS:
+                        try:
+                            run_date = datetime.strptime(run_date_str, format_string)
+                        except ValueError:
+                            continue
+                    if run_date is None:
                         logging.warning(f"Unhandled date format in `PGM / RUN BY / DATE`: {run_date_str}")
-                        run_date = None
                 continue
 
             if line_label == "DESCRIPTION":
@@ -459,6 +466,8 @@ class Dataset:
         self.header: Optional[Header] = None
         self.tec_maps: List[IonexMap] = []
         self.rms_maps: List[IonexMap] = []
+
+        # self._filepaths: List[str] = []
     
     def load(self, input: io.TextIOWrapper, strict: bool = True) -> None:
         header = None

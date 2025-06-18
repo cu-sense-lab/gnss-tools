@@ -26,31 +26,62 @@ def print_columns(
             )
         )
 
+
 def print_to_columns(
-        lines: List[str],
-        break_seq: str = "\n",
-        colsep: str = "     ",
+        string_list: List[str],
+        num_columns: int = 2,
+        colsep: str = "  ",
+        row_first: bool = True,
+        pad_along_columns: bool = True,
     ) -> None:
     """
-    Print the strings from `lines` in columns, with entries going down rows in each column first.
+    Print the strings from `string_list` in columns.
     """
-    rows = []
-    i = 0
-    j = 0
-    ncol = 1
-    while i < len(lines):
-        line = lines[i]
-        if line == break_seq:
-            i += 1
-            j = 0
-            continue
-        while len(rows) <= j:
-            rows.append(["" for k in range(ncol - 1)])
-        while i < len(string_list) and string_list[i] != break_seq:
-            row.append(string_list[i])
-            i += 1
-        rows.append(row)
-        i += 1
+    assert num_columns > 0, "Number of columns must be greater than 0."
+    # First, split the string list into rows and columns
+    num_rows = (len(string_list) + num_columns - 1) // num_columns
+    rows: list[list[str]] = []
+    if row_first:
+        # Split by rows first
+        current_row = []
+        for i, item in enumerate(string_list):
+            current_row.append(item)
+            if len(current_row) == num_columns:
+                rows.append(current_row)
+                current_row = []
+        if current_row:
+            if len(current_row) < num_columns:
+                # Pad the current row if necessary
+                current_row += [""] * (num_columns - len(current_row))
+            rows.append(current_row)
+    else:
+        # Split by columns first
+        for i, item in enumerate(string_list):
+            row_index = i % num_rows
+            if len(rows) <= row_index:
+                rows.append([])
+            rows[row_index].append(item)
+        for row in rows:
+            if len(row) < num_columns:
+                # Pad the row if necessary
+                row += [""] * (num_columns - len(row))
+    # Pad strings if necessary
+    if pad_along_columns:
+        for j in range(num_columns):
+            # Find the maximum length of the strings in each column
+            max_column_string_length = max(
+                len(row[j]) for row in rows
+            )
+            for row in rows:
+                row[j] = row[j].ljust(max_column_string_length)
+    # Concatenate the rows into a single string with column separation
+    row_strings = []
+    for row in rows:
+        row_string = colsep.join(row)
+        row_strings.append(row_string)
+    # Print the rows
+    for row_string in row_strings:
+        print(row_string)
 
 
 import calendar
