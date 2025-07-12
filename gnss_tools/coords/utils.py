@@ -10,12 +10,17 @@ import numpy as np
 from gnss_tools.time.gmst import gpst2gmst, gpst2gmst_vec
 from numpy.typing import NDArray
 
+NDARRAY_INTP = np.ndarray[tuple[int], np.dtype[np.intp]]
+NDARRAY_F64 = np.ndarray[tuple[int], np.dtype[np.float64]]
+NDARRAY_2D_F64 = np.ndarray[tuple[int, int], np.dtype[np.float64]]
+NDARRAY_3D_F64 = np.ndarray[tuple[int, int, int], np.dtype[np.float64]]
+
 WGS84_rf = 298.257223563  # Reciprocal flattening (1/f)
 WGS84_a = 6378137.0  # Earth semi-major axis (m)
 WGS84_b = WGS84_a - WGS84_a / WGS84_rf  # Earth semi-minor axis derived from f = (a - b) / a
 
 
-def make_3_tuple_array(arr: np.ndarray):
+def make_3_tuple_array(arr: np.ndarray | list | tuple) -> NDARRAY_2D_F64:
     """
     Reshapes ndarray so that it has dimensions (N,3)
     """
@@ -27,7 +32,7 @@ def make_3_tuple_array(arr: np.ndarray):
     return arr
 
 
-def dms2deg(arr: np.ndarray):
+def dms2deg(arr: np.ndarray | list | tuple) -> NDARRAY_F64:
     """Converts degrees, minutes, seconds to degrees.
     Parameters
     ----------
@@ -45,12 +50,12 @@ def dms2deg(arr: np.ndarray):
 
 
 def ecf2geo(
-    x_ref: NDArray[np.float64],
+    x_ref: NDARRAY_2D_F64 | np.ndarray | list | tuple,
     max_iterations: int = 10,
     a: float = WGS84_a,
     b: float = WGS84_b,
     tolerance: float = 1e-10,
-) -> np.ndarray | Tuple[np.ndarray, np.ndarray]:
+) -> NDARRAY_2D_F64:
     """Converts ecf coordinates to geodetic coordinates,
 
     Parameters
@@ -118,7 +123,7 @@ def ecf2geo(
     return geo
 
 
-def local_enu(lat: np.ndarray, lon: np.ndarray) -> np.ndarray:
+def local_enu(lat: NDARRAY_F64 | float, lon: NDARRAY_F64 | float) -> NDARRAY_3D_F64:
     Rl = np.array(
         [
             [
@@ -134,12 +139,12 @@ def local_enu(lat: np.ndarray, lon: np.ndarray) -> np.ndarray:
 
 
 def ecf2enu(
-    x_ref: NDArray[np.float64],
-    x_obj: NDArray[np.float64],
+    x_ref: NDARRAY_2D_F64 | np.ndarray | list | tuple,
+    x_obj: NDARRAY_2D_F64 | np.ndarray | list | tuple,
     a: float = WGS84_a,
     b: float = WGS84_b,
     max_iterations: int = 10,
-):
+) -> NDARRAY_2D_F64:
     """Converts satellite ecf coordinates to user-relative ENU coordinates.
 
     Parameters
@@ -171,7 +176,7 @@ def ecf2enu(
     return np.sum(Rl * dx.T[None, :, :], axis=1).T  # sum across columns
 
 
-def enu2sky(enu: NDArray[np.float64]):
+def enu2sky(enu: NDARRAY_2D_F64 | np.ndarray | list | tuple) -> NDARRAY_2D_F64:
     """Converts local East-North-Up coordinates to Sky coordinates (azimuth, elevation, radius)
 
     Parameters
@@ -195,7 +200,7 @@ def enu2sky(enu: NDArray[np.float64]):
     return np.column_stack((np.degrees(az), np.degrees(el), r))
 
 
-def xyz2sky(xyz: NDArray[np.float64]):
+def xyz2sky(xyz: NDARRAY_2D_F64) -> NDARRAY_2D_F64:
     """Converts XYZ coordinates to azimuth, elevation, and radius
     The Z axis is defined to be the direction of the observer's zenith.
     Azimuth is measured counterclockwise from the X axis, which is
@@ -222,7 +227,7 @@ def xyz2sky(xyz: NDArray[np.float64]):
     return np.stack((np.degrees(az), np.degrees(el), r), axis=-1)
 
 
-def sky2enu(sky: NDArray[np.float64]):
+def sky2enu(sky: NDARRAY_2D_F64 | np.ndarray | list | tuple) -> NDARRAY_2D_F64:
     """Converts local Sky coordinates back to local East-North-Up coordinates."""
     sky = make_3_tuple_array(sky)
     az, el, r = sky[:, 0], sky[:, 1], sky[:, 2]
@@ -236,12 +241,12 @@ def sky2enu(sky: NDArray[np.float64]):
 
 
 def ecf2sky(
-    x_ref: NDArray[np.float64],
-    x_obj: NDArray[np.float64],
+    x_ref: NDARRAY_2D_F64 | np.ndarray | list | tuple,
+    x_obj: NDARRAY_2D_F64 | np.ndarray | list | tuple,
     a: float = WGS84_a,
     b: float = WGS84_b,
     max_iterations: int = 10,
-):
+) -> NDARRAY_2D_F64:
     """Converts user and satellite ecf coordinates to azimuth and elevation
     from user on Earth, by first computing their relative ENU coordinates.  See `enu2sky`.
 
@@ -342,7 +347,7 @@ def radius_of_curvature(lat: float, az: float, a: float = WGS84_a, b: float = WG
     return R
 
 
-def local_radius_of_curvature(geo: NDArray[np.float64]):
+def local_radius_of_curvature(geo: NDARRAY_2D_F64 | np.ndarray | list | tuple) -> NDARRAY_2D_F64:
     """
     Returns local (north-south) radius of curvature given geodetic coordinates.
     Deprecated: Use `meridional_radius_of_curvature` instead.
@@ -360,7 +365,7 @@ def local_radius_of_curvature(geo: NDArray[np.float64]):
     return N1
 
 
-def geo2ecf(geo: NDArray[np.float64], a: float = WGS84_a, b: float = WGS84_b):
+def geo2ecf(geo: np.ndarray | list | float, a: float = WGS84_a, b: float = WGS84_b) -> NDARRAY_2D_F64:
     """Converts geodetic coordinates to ecf coordinates
 
     Parameters
@@ -392,7 +397,7 @@ def geo2ecf(geo: NDArray[np.float64], a: float = WGS84_a, b: float = WGS84_b):
     return x_ref
 
 
-def geo2sky(geo_ref: NDArray[np.float64], geo_obj: NDArray[np.float64], a: float = WGS84_a, b: float = WGS84_b):
+def geo2sky(geo_ref: np.ndarray | list | float, geo_obj: np.ndarray, a: float = WGS84_a, b: float = WGS84_b) -> NDARRAY_2D_F64:
     """Converts object geodetic coordinates to azimuth and elevation from
     reference geodetic coordinates on Earth by first computing their relative
     Sky coordinates.  See `enu2sky`.
@@ -418,7 +423,7 @@ def geo2sky(geo_ref: NDArray[np.float64], geo_obj: NDArray[np.float64], a: float
 
 def eci2ecf(
     time_gpst_arr: np.ndarray,
-    r_eci: np.ndarray,
+    r_eci: NDARRAY_2D_F64,
     v_eci: Optional[np.ndarray] = None,
     gtime_dtype: bool = False,
     dtheta: float = 7.29211585275553e-005,
@@ -478,7 +483,7 @@ def eci2ecf(
         return r_ecf, v_ecf
 
     else:
-        return r_ecf
+        return r_ecf, None
 
 
 def ecf2eci(
