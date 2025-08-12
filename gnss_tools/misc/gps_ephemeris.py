@@ -180,7 +180,7 @@ def compute_gps_transmitter_clock_bias(
     Note the eccentric anomaly `E` is computed in (e.g.) `compute_gps_orbital_parameters_from_ephemeris`
 
     TODO: TOC is in `epoch` of RINEX Nav files: they need to be converted to TOW integer
-    sat_time_correction_epoch = np.array([(e - GPS_EPOCH.replace(tzinfo=None)).total_seconds() for e in eph.epoch]])    
+    sat_time_correction_epoch = np.array([(e - GPS_EPOCH).total_seconds() for e in eph.epoch]])    
     dt = transmit_time_gpst - sat_time_correction_epoch
     ----------------------------------------------------------------------------
     Input:
@@ -211,7 +211,7 @@ def compute_gps_transmitter_clock_bias_with_relativity_correction(
     Note the eccentric anomaly `E` is computed in (e.g.) `compute_gps_orbital_parameters_from_ephemeris`
 
     TODO: TOC is in `epoch` of RINEX Nav files:
-    sat_time_correction_epoch = np.array([(e - GPS_EPOCH.replace(tzinfo=None)).total_seconds() for e in eph.epoch]])    
+    sat_time_correction_epoch = np.array([(e - GPS_EPOCH).total_seconds() for e in eph.epoch]])    
     dt = transmit_time_gpst - sat_time_correction_epoch
     ----------------------------------------------------------------------------
     Input:

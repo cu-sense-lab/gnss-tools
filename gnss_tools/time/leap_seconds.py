@@ -13,7 +13,7 @@ from collections import namedtuple
 from typing import List
 
 OffsetEpoch = namedtuple('OffsetEpoch', ['epoch', 'offset'])
-NTP_EPOCH = datetime(year=1900, month=1, day=1, hour=0, minute=0, second=0, tzinfo=timezone.utc)
+NTP_EPOCH = datetime(year=1900, month=1, day=1, hour=0, minute=0, second=0)
 LEAP_SECOND_EPOCHS: List[OffsetEpoch] = []
 _LEAP_SECONDS_FILEPATH = join(dirname(__file__), './leap_second_epochs.txt')
 

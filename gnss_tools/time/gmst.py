@@ -49,5 +49,5 @@ def dt2gmst(dt: datetime) -> float:
     Returns:
         GMST in hours
     """
-    delta_days = (dt - datetime(2000, 1, 1, 12, 0, 0, tzinfo=timezone.utc)).total_seconds() / (3600 * 24)
+    delta_days = (dt - datetime(2000, 1, 1, 12, 0, 0)).total_seconds() / (3600 * 24)
     return 18.697374558 + 24.065709824419 * delta_days

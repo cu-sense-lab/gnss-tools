@@ -94,7 +94,7 @@ class RINEX_LNAVEphemeris:
         # epoch in RINEX nav record corresponds to TOC
         # But it should be interpreted as GPS time -- i.e. no leap seconds
         self.epoch_gpst_seconds = (
-            self.epoch - GPS_EPOCH.replace(tzinfo=None)
+            self.epoch - GPS_EPOCH
         ).total_seconds()
         self.toc = self.epoch_gpst_seconds - self.week_num * 604800
 

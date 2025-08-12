@@ -6,7 +6,7 @@ import numpy as np
 from dataclasses import dataclass
 
 GPS_EPOCH = datetime(
-    year=1980, month=1, day=6, hour=0, minute=0, second=0, tzinfo=timezone.utc
+    year=1980, month=1, day=6, hour=0, minute=0, second=0
 )
 ONE_HOUR = timedelta(hours=1)
 ONE_DAY = timedelta(days=1)
@@ -114,9 +114,7 @@ def parse_time_epoch(timestr: str) -> float:
         raise Exception(
             "`datetime` cannot handle sub-microsecond precision, but epoch in file appears to specify this level of precision."
         )
-    time = datetime.strptime(timestr[:26], "%Y %m %d %H %M %S.%f").replace(
-        tzinfo=timezone.utc
-    )
+    time = datetime.strptime(timestr[:26], "%Y %m %d %H %M %S.%f")
     return (time - GPS_EPOCH).total_seconds()  # GPS time
 
 
