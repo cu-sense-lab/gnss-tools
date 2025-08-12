@@ -63,3 +63,16 @@ def nan_filtfilt(b, a, x: np.ndarray) -> np.ndarray:
     # Fill NaN values with NaN
     result[~mask] = np.nan
     return result
+
+def nan_unwrap(x: np.ndarray, period: float = 2 * np.pi) -> np.ndarray:
+    """
+    Unwrap the phase of the data x, ignoring NaN values.
+    """
+    # Create a mask for non-NaN values
+    mask = ~np.isnan(x)
+    # Unwrap the phase
+    result = np.empty_like(x)
+    result[mask] = np.unwrap(x[mask], period=period)
+    # Fill NaN values with NaN
+    result[~mask] = np.nan
+    return result
