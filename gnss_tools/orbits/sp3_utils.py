@@ -8,6 +8,7 @@ Utilities for SP3 data file download and parsing
 """
 
 import os
+import logging
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict
 from gnss_tools.time.gtime import GTIME_DTYPE
@@ -55,7 +56,7 @@ def download_and_decompress_sp3_file(
     decompressed_filepath = os.path.join(output_dir, decompressed_filepath)
     if not os.path.exists(os.path.dirname(output_filepath)):
         os.makedirs(os.path.dirname(output_filepath))
-    # print(output_filepath, filepath)
+    # logging.info(output_filepath, filepath)
     downloaded = decompressed = False
     if overwrite or not (
         os.path.exists(output_filepath) or os.path.exists(decompressed_filepath)
@@ -112,13 +113,13 @@ def download_and_parse_sp3_data(
     while day < day_end:
 
         if verbose:
-            print("\rFetching SP3 data... {0}".format(day.strftime("%Y%m%d")), end="")
+            logging.info("\rFetching SP3 data... {0}".format(day.strftime("%Y%m%d")))
 
         try:
             sp3_filepath = download_and_decompress_sp3_file(day, data_dir, overwrite)
             sp3_filepaths.append(sp3_filepath)
         except Exception as e:
-            print(
+            logging.info(
                 "Failed to download/decompress SP3 filepath for day: {0}".format(
                     day.strftime("%Y%m%d")
                 )
@@ -128,14 +129,14 @@ def download_and_parse_sp3_data(
         day += timedelta(days=1)
 
     if verbose:
-        print("... done.")
-        print("Parsing SP3 data...", end="")
+        logging.info("... done.")
+        logging.info("Parsing SP3 data...")
 
     sp3_dataset = Dataset()
     sp3_dataset.load_files(sp3_filepaths, strict=False)
 
     if verbose:
-        print(" done.")
+        logging.info(" done.")
 
     return sp3_dataset.get_sp3_arrays(remove_duplicates=True)
 

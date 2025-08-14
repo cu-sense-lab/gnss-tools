@@ -15,6 +15,28 @@ def nan_scipy_detrend(x: np.ndarray, axis: int = 0) -> np.ndarray:
     result[~mask] = np.nan
     return result
 
+def nan_endpoint_detrend(x: np.ndarray) -> np.ndarray:
+    """
+    Perform endpoint detrend on a 1D array, ignoring NaN values.
+    """
+    if x.ndim != 1:
+        raise ValueError("Input array must be 1D.")
+    # Create a mask for non-NaN values
+    mask = ~np.isnan(x)
+    if np.sum(mask) < 2:
+        return x  # Not enough data to detrend
+    # Get the first and last non-NaN values and their indices
+    first_idx = np.where(mask)[0][0]
+    last_idx = np.where(mask)[0][-1]
+    first_val = x[first_idx]
+    last_val = x[last_idx]
+    # Create a linear trend
+    slope = (last_val - first_val) / (last_idx - first_idx)
+    trend = slope * (np.arange(len(x)) - first_idx) + first_val
+    # Detrend the data
+    y_detrended = x - trend
+    return y_detrended
+
 def nan_polyfit(x: np.ndarray, y: np.ndarray, deg: int) -> np.ndarray:
     """
     Fit a polynomial of degree deg to the data (x, y), ignoring NaN values.
