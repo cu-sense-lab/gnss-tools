@@ -98,3 +98,20 @@ def nan_unwrap(x: np.ndarray, period: float = 2 * np.pi) -> np.ndarray:
     # Fill NaN values with NaN
     result[~mask] = np.nan
     return result
+
+def interpolate_nans(x: np.ndarray, method: str = 'linear') -> np.ndarray:
+    """
+    Interpolate the nan values in x.
+    Overwrites NaN values with interpolated values.
+    """
+    from scipy.interpolate import interp1d
+    # Create a mask for non-NaN values
+    mask = ~np.isnan(x)
+    if np.sum(mask) < 2:
+        return x  # Not enough data to interpolate
+    # Create an interpolator
+    interpolator = interp1d(np.where(mask)[0], x[mask], kind=method, bounds_error=False, fill_value="extrapolate")
+    # Interpolate the data
+    nan_indices = np.where(np.isnan(x))[0]
+    x[nan_indices] = interpolator(nan_indices)
+    return x
