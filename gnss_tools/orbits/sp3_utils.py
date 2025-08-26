@@ -138,7 +138,7 @@ def download_and_parse_sp3_data(
     if verbose:
         logging.info(" done.")
 
-    return sp3_dataset.get_sp3_arrays(remove_duplicates=True)
+    return sp3_dataset.get_sp3_arrays(merge_duplicates=True)
 
 
 def compute_splines_from_sp3_dict(epochs: np.ndarray, records: Dict[str, np.ndarray], order: int=5) -> Dict[str, List[scipy.interpolate.UnivariateSpline]]:

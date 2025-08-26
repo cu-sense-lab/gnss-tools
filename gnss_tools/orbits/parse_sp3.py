@@ -313,18 +313,21 @@ class Dataset:
     
     def get_sp3_arrays(
             self,
-            remove_duplicates: bool = False,
+            merge_duplicates: bool = False,
             convert_keys: Optional[Callable[[str], str]] = None
     ) -> SP3Arrays:
-        if remove_duplicates:
-            records = {}
+        if merge_duplicates:
+            records_dict: dict[float, SP3Record] = {}
             for record in self.records:
-                if record.epoch in records:
-                    continue
-                records[record.epoch] = record
-            records = list(records.values())
+                if record.epoch not in records_dict:
+                    records_dict[record.epoch] = record
+                else:
+                    existing_record = records_dict[record.epoch]
+                    existing_record.p_entries.update(record.p_entries)
+                    existing_record.v_entries.update(record.v_entries)
+            records: list[SP3Record] = list(records_dict.values())
         else:
-            records = self.records
+            records: list[SP3Record] = self.records
 
         records = sorted(records, key=lambda record: record.epoch)
         num_records = len(records)
