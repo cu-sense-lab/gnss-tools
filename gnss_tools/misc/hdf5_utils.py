@@ -86,7 +86,7 @@ def read_hdf5_into_dict(
     return data
 
 
-def write_dict_to_hdf5(data: dict, output_group: h5py.Group, path: str = "/", ignore_objects: bool = True, write_scalars_as_attributes: bool = True):
+def write_dict_to_hdf5(data: dict, output_group: h5py.Group, path: str = "", ignore_objects: bool = True, write_scalars_as_attributes: bool = True):
     """
     ----------------------------------------------------------------------------
     Given a dictionary-like structure, writes to an HDF5 file.  `ndarray`
