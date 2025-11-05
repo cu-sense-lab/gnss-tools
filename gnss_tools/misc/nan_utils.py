@@ -99,11 +99,20 @@ def nan_unwrap(x: np.ndarray, period: float = 2 * np.pi) -> np.ndarray:
     result[~mask] = np.nan
     return result
 
-def interpolate_nans(x: np.ndarray, method: str = 'linear') -> np.ndarray:
+def interpolate_nans(x: np.ndarray, method: str = 'linear', axis: int = -1) -> np.ndarray:
     """
     Interpolate the nan values in x.
     Overwrites NaN values with interpolated values.
     """
+    if x.ndim != 1:
+        shape = x.shape
+        x = np.moveaxis(x, axis, -1).reshape(-1, shape[axis])
+        for i in range(x.shape[0]):
+            x[i, :] = interpolate_nans(x[i, :], method=method, axis=-1)
+        x = x.reshape(*shape[:-1], shape[axis])
+        x = np.moveaxis(x, -1, axis)
+        return x
+
     from scipy.interpolate import interp1d
     # Create a mask for non-NaN values
     mask = ~np.isnan(x)
