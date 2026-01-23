@@ -107,6 +107,8 @@ def write_dict_to_hdf5(data: dict, f: h5py.File, path: str = "/", ignore_objects
             f.create_dataset(path + str(key), data=np.array(item))
         elif isinstance(item, dict):
             write_dict_to_hdf5(item, f, path + str(key) + "/")
+        elif hasattr(item, "__dict__"):
+            write_dict_to_hdf5(vars(item), f, path + str(key) + "/")
         else:
             to_dict = getattr(item, "to_dict", None)
             if callable(to_dict):
