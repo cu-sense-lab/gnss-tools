@@ -17,6 +17,8 @@ from .utils import (
     eci2ecf,
     ecf2eci,
     rotate_pos_ecf,
+    WGS84_a,
+    WGS84_b,
 )
 from .sun_coordinates import compute_sun_eci_coordinates
 

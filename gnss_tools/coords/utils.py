@@ -269,14 +269,14 @@ def ecf2sky(
     return enu2sky(enu)
 
 
-
-def meridional_radius_of_curvature(lat: float, a: float = WGS84_a, b: float = WGS84_b) -> float:
+from numpy.typing import ArrayLike
+def meridional_radius_of_curvature(lat: float | np.ndarray, a: float = WGS84_a, b: float = WGS84_b) -> float | np.ndarray:
     """
     Compute the meridional (north-south) radius of curvature.
 
     Parameters
     ----------
-    lat : float
+    lat : float | ArrayLike
         Geodetic latitude (degrees)
     a : float
         Earth semi-major axis (m)
@@ -285,7 +285,7 @@ def meridional_radius_of_curvature(lat: float, a: float = WGS84_a, b: float = WG
 
     Returns
     -------
-    M : float
+    M : float | ArrayLike
         Meridional radius of curvature (m)
     """
     lat_rad = np.radians(lat)

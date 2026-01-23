@@ -86,7 +86,7 @@ def read_hdf5_into_dict(
     return data
 
 
-def write_dict_to_hdf5(data: dict, f: h5py.File, path: str = "/", ignore_objects: bool = True, write_scalars_as_attributes: bool = True):
+def write_dict_to_hdf5(data: dict, output_group: h5py.Group, path: str = "", ignore_objects: bool = True, write_scalars_as_attributes: bool = True):
     """
     ----------------------------------------------------------------------------
     Given a dictionary-like structure, writes to an HDF5 file.  `ndarray`
@@ -95,16 +95,16 @@ def write_dict_to_hdf5(data: dict, f: h5py.File, path: str = "/", ignore_objects
     structure of the dictionary.
     
     `data` -- dictionary object containing data
-    `f` -- handle to HDF5 output file
+    `output_group` -- handle to HDF5 output group
     """
     for key, item in data.items():
         if np.isscalar(item):
             if write_scalars_as_attributes:
-                f.attrs[key] = item
+                output_group.attrs[key] = item
             else:
-                f.create_dataset(path + str(key), data=item)
+                output_group.create_dataset(path + str(key), data=item)
         elif isinstance(item, np.ndarray) or isinstance(item, list) or isinstance(item, tuple):
-            f.create_dataset(path + str(key), data=np.array(item))
+            output_group.create_dataset(path + str(key), data=np.array(item))
         elif isinstance(item, dict):
             write_dict_to_hdf5(item, f, path + str(key) + "/")
         elif hasattr(item, "__dict__"):
@@ -114,7 +114,7 @@ def write_dict_to_hdf5(data: dict, f: h5py.File, path: str = "/", ignore_objects
             if callable(to_dict):
                 d = to_dict()
                 if isinstance(d, dict):
-                    write_dict_to_hdf5(d, f, path + str(key) + "/")
+                    write_dict_to_hdf5(d, output_group, path + str(key) + "/")
             if not ignore_objects:
                 raise ValueError("Cannot save {0} type".format(type(item)))
 
