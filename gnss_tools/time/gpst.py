@@ -6,7 +6,7 @@ Date: 2025-01-02
 """
 
 import numpy as np
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, date, timedelta, timezone
 from .leap_seconds import utc_tai_offset
 from .gtime import GTIME_DTYPE, GTime
 from dataclasses import dataclass
@@ -17,9 +17,11 @@ GPS_EPOCH = datetime(year=1980, month=1, day=6, hour=0, minute=0, second=0)
 GPS_TAI_OFFSET = utc_tai_offset(GPS_EPOCH)
 SECONDS_IN_WEEK = 3600 * 24 * 7
 
-def convert_datetime_to_gps_seconds(dt: datetime) -> float:
+def convert_datetime_to_gps_seconds(dt: datetime | date) -> float:
     # if not hasattr(dt, "tzinfo") or dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
     #     dt = dt.replace(tzinfo=timezone.utc)
+    if isinstance(dt, date):
+        dt = datetime(year=dt.year, month=dt.month, day=dt.day)
     time_gps_offset = utc_tai_offset(dt) - GPS_TAI_OFFSET
     timedelta = dt - GPS_EPOCH + time_gps_offset
     return timedelta.days * 86400 + timedelta.seconds + timedelta.microseconds / 1e6

@@ -15,7 +15,7 @@ from gnss_tools.time.gtime import GTIME_DTYPE
 import numpy as np
 import scipy.interpolate
 from .parse_sp3 import Dataset, SP3Arrays
-from ..misc.data_utils import cddis_download, format_filepath, decompress
+from ..misc.data_utils import cddis_download, format_filepath, decompress, http_download
 from ..time.gpst import GPSTime
 from .array_lagrange_interpolation import compute_array_lagrange_interpolation
 
@@ -61,7 +61,9 @@ def download_and_decompress_sp3_file(
     if overwrite or not (
         os.path.exists(output_filepath) or os.path.exists(decompressed_filepath)
     ):
-        downloaded = cddis_download(filepath, output_filepath)
+        # downloaded = cddis_download(filepath, output_filepath)
+        url_path = "https://cddis.nasa.gov/archive/" + filepath
+        downloaded = http_download(url_path, output_filepath)
     if os.path.exists(output_filepath):
         decompressed = decompress(output_filepath, decompressed_filepath)
 
@@ -188,6 +190,7 @@ def compute_satellite_ecf_positions_from_cddis_sp3(
     order: int = 5,
     sat_ids: Optional[List[str]] = None,
     use_splines: bool = True,  # otherwise use lagrange
+    overwrite: bool = False,
 ) -> Dict[str, np.ndarray]:
     """
     `times` -- times (GPS seconds) for which to compute satellite positions
@@ -202,7 +205,7 @@ def compute_satellite_ecf_positions_from_cddis_sp3(
         end_time = GPSTime.from_float_seconds(end_time_gpst)
     else:
         raise Exception("`times` must be of type GTIME_DTYPE or float/int array.")
-    sp3_arrays = download_and_parse_sp3_data(start_time, end_time, data_dir)
+    sp3_arrays = download_and_parse_sp3_data(start_time, end_time, data_dir, overwrite=overwrite)
     if sp3_arrays is None:
         raise ValueError("No SP3 data available")
     

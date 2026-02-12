@@ -7,7 +7,7 @@ from gnss_tools.misc.data_utils import format_filepath, http_download
 import requests
 import os
 import logging
-from datetime import datetime
+from datetime import datetime, date
 from typing import List, Tuple, Optional
 import gnss_tools.rinex_io.rinex3 as rinex3
 import hatanaka
@@ -128,7 +128,7 @@ def load_station_data(
 DEFAULT_IONEX_FILENAME_TEMPLATE = "IGS0OPSFIN_{yyyy}{ddd}0000_01D_02H_GIM.INX.gz"
 
 def _download_ionex_for_day(
-        day: datetime,
+        day: datetime | date,
         overwrite: bool = False,
         data_dir: str = DATA_DIR,
         filename_template: str = DEFAULT_IONEX_FILENAME_TEMPLATE,

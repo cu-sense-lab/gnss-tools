@@ -19,7 +19,7 @@ import subprocess
 from gnss_tools.time.gpst import GPSTime
 
 
-def format_filepath(filepath_expr: str, dt: Optional[datetime.datetime] = None, **kwargs) -> str:
+def format_filepath(filepath_expr: str, dt: Optional[datetime.datetime | datetime.date] = None, **kwargs) -> str:
     """
     ------------------------------------------------------------------------
     `filepath_expr` -- a formattable string that defines the full filepath.
@@ -57,6 +57,8 @@ def format_filepath(filepath_expr: str, dt: Optional[datetime.datetime] = None, 
             for GLONASS use 'igl' (after GPS week 1300) or 'igx' (before GPS week 1300)
     """
     if dt is not None:
+        if isinstance(dt, datetime.date):
+            dt = datetime.datetime(dt.year, dt.month, dt.day)
         gpst = GPSTime.from_datetime(dt)
         week_num = gpst.week_num
         week_day = int(gpst.tow.to_float() / 86400)
