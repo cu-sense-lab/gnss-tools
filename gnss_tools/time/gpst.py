@@ -20,7 +20,7 @@ SECONDS_IN_WEEK = 3600 * 24 * 7
 def convert_datetime_to_gps_seconds(dt: datetime | date) -> float:
     # if not hasattr(dt, "tzinfo") or dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
     #     dt = dt.replace(tzinfo=timezone.utc)
-    if isinstance(dt, date):
+    if isinstance(dt, date) and not isinstance(dt, datetime):
         dt = datetime(year=dt.year, month=dt.month, day=dt.day)
     time_gps_offset = utc_tai_offset(dt) - GPS_TAI_OFFSET
     timedelta = dt - GPS_EPOCH + time_gps_offset
