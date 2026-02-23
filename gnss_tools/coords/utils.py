@@ -124,6 +124,21 @@ def ecf2geo(
 
 
 def local_enu(lat: NDARRAY_F64 | float, lon: NDARRAY_F64 | float) -> NDARRAY_3D_F64:
+    """
+    Compute the local ENU rotation matrix for the given latitude and longitude.
+    Parameters
+    ----------
+        lat : float or array of floats
+            Latitude in degrees
+        lon : float or array of floats
+            Longitude in degrees
+    Returns
+    -------
+        Rl : ndarray of shape (3,3) or (N,3,3)
+            The local ENU rotation matrix; rows correspond to east, north, and up unit vectors in ECF coordinates
+
+    Note: the rotation matrix going the other way (inverse) is just the transpose
+    """
     Rl = np.array(
         [
             [
