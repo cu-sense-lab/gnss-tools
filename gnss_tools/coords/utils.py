@@ -123,7 +123,7 @@ def ecf2geo(
     return geo
 
 
-def local_enu(lat: NDARRAY_F64 | float, lon: NDARRAY_F64 | float) -> NDARRAY_3D_F64:
+def local_enu(lat: NDARRAY_F64 | float, lon: NDARRAY_F64 | float, degrees: bool = True) -> NDARRAY_3D_F64:
     """
     Compute the local ENU rotation matrix for the given latitude and longitude.
     Parameters
@@ -139,6 +139,9 @@ def local_enu(lat: NDARRAY_F64 | float, lon: NDARRAY_F64 | float) -> NDARRAY_3D_
 
     Note: the rotation matrix going the other way (inverse) is just the transpose
     """
+    if degrees:
+        lat = np.radians(lat)
+        lon = np.radians(lon)
     Rl = np.array(
         [
             [
@@ -246,7 +249,6 @@ def sky2enu(sky: NDARRAY_2D_F64 | np.ndarray | list | tuple) -> NDARRAY_2D_F64:
     """Converts local Sky coordinates back to local East-North-Up coordinates."""
     sky = make_3_tuple_array(sky)
     az, el, r = sky[:, 0], sky[:, 1], sky[:, 2]
-    x = r * np.array([1, 0, 0])
     theta = np.radians(90 - az)
     phi = np.radians(el)
     e = r * np.cos(theta) * np.cos(phi)
