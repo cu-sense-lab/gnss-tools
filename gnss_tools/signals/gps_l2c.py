@@ -102,9 +102,6 @@ def generate_code_sequence_L2CL(prn: int) -> np.ndarray:
         state = shift_state(state)
     return code_seq_01
 
-CODE_SEQUENCES_L2CL = {prn: 1 - 2 * generate_code_sequence_L2CL(prn).astype(np.int8) for prn in range(1, 33)}
-CODE_SEQUENCES_L2CM = {prn: 1 - 2 * generate_code_sequence_L2CM(prn).astype(np.int8) for prn in range(1, 33)}
-
 
 _CODE_SEQUENCES_GPS_L2CL = {}
 def get_GPS_L2CL_code_sequence(prn: int) -> np.ndarray:
