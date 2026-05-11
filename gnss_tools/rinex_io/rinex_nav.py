@@ -6,7 +6,7 @@ Date: 2025-01-02
 import re
 from datetime import datetime
 from dataclasses import dataclass
-from .rinex2 import parse_RINEX2_header
+from .rinex2 import parse_header
 from ..time.gpst import GPS_EPOCH
 from typing import Any, Dict, List, Tuple
 
@@ -112,7 +112,7 @@ def parse_RINEX_LNAV_data(
         {<prn>: [RINEX_LNAVEphemeris]}
     """
     epoch_pattern = (
-        "(\s?\d+)\s(\s?\d+)\s(\s?\d+)\s(\s?\d+)\s(\s?\d+)\s(\s?\d+)\s(\s?\d+\.\d)"
+        r"(\s?\d+)\s(\s?\d+)\s(\s?\d+)\s(\s?\d+)\s(\s?\d+)\s(\s?\d+)\s(\s?\d+\.\d)"
     )
     number_pattern = "\n?\s*([+-]?\d+\.\d{12}D[+-]?\d{2})"
     pattern = epoch_pattern + 29 * number_pattern
@@ -221,6 +221,6 @@ def parse_RINEX_LNAV_file(filepath: str) -> Tuple[Dict[str, Any], Dict[int, List
             break
     header_lines = lines[: i + 1]
     nav_lines = lines[i + 1 :]
-    header = parse_RINEX2_header(header_lines)
+    header = parse_header(header_lines)
     nav_data = parse_RINEX_LNAV_data(nav_lines)
     return header, nav_data

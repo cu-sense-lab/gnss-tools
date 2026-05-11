@@ -286,7 +286,7 @@ class Dataset:
         num_files = len(filepaths)
         for i, filepath in enumerate(filepaths):
             if verbose:
-                print(f"\rLoading {i: 3} / {num_files}", end="")
+                print(f"\rLoading {i: 3} / {num_files: 3}:  {filepath}", end="")
             with open(filepath, "r") as f:
                 self.load_file(f, parse_position, parse_velocity, strict)
         if verbose:
