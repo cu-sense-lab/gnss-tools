@@ -11,7 +11,7 @@ from datetime import datetime, date
 from typing import List, Tuple, Optional
 import gnss_tools.rinex_io.rinex3 as rinex3
 import hatanaka
-
+from pathlib import Path
 
 CDDIS_ARCHIVE_URL = f"https://cddis.nasa.gov/archive/"
 RINEX3_ARCHIVE_PATH_TEMPLATE = "gnss/data/daily/{yyyy}/{ddd}/{yy}d/"
@@ -130,7 +130,7 @@ DEFAULT_IONEX_FILENAME_TEMPLATE = "IGS0OPSFIN_{yyyy}{ddd}0000_01D_02H_GIM.INX.gz
 def _download_ionex_for_day(
         day: datetime | date,
         overwrite: bool = False,
-        data_dir: str = DATA_DIR,
+        data_dir: str | Path = DATA_DIR,
         filename_template: str = DEFAULT_IONEX_FILENAME_TEMPLATE,
 ) -> str:
     ionex_archive_path = format_filepath(IONEX_ARCHIVE_PATH_TEMPLATE, day)
