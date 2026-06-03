@@ -189,7 +189,7 @@ def ecf2enu(
     N = geo.shape[0]
 
     # create the rotation matrix
-    Rl = local_enu(lat, lon)
+    Rl = local_enu(lat, lon, degrees=False)
     dx = x_obj - x_ref
     return np.sum(Rl * dx.T[None, :, :], axis=1).T  # sum across columns
 
