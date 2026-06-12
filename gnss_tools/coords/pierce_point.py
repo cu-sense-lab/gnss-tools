@@ -14,16 +14,16 @@ def compute_earth_pierce_point(
     Parameters
     ----------
     pos_0_ecf : np.ndarray
-        The ECEF coordinates of the reference point.
+        The ECEF coordinates (meters) of the reference point.
     pos_1_ecf : np.ndarray
-        The ECEF coordinates of the object point."
+        The ECEF coordinates (meters) of the object point."
     piercing_altitude : float
-        The altitude of the shell above the Earth's surface.
+        The altitude (meters) of the shell above the Earth's surface.
     
     Returns
     -------
     np.ndarray
-        The ECEF coordinates of the pierce point.
+        The ECEF coordinates (meters) of the pierce point.
     """
     pos_0_ecf = pos_0_ecf.reshape((-1, 3))
     pos_1_ecf = pos_1_ecf.reshape((-1, 3))
@@ -36,26 +36,26 @@ def compute_earth_pierce_point(
     delta_pos_ecf /= np.linalg.norm(delta_pos_ecf, axis=1, keepdims=True)
 
     pos_0_geo = ecf2geo(pos_0_ecf)
-    lon = np.radians(pos_0_geo[:, 0])
-    lat = np.radians(pos_0_geo[:, 1])
+    lon_deg = pos_0_geo[:, 0]
+    lat_deg = pos_0_geo[:, 1]
 
     # create the rotation matrix
-    Rl = local_enu(lat, lon)
+    Rl = local_enu(lat_deg, lon_deg, degrees=True)
     enu = np.sum(Rl * delta_pos_ecf.T[None, :, :], axis=1).T
     e = enu[:, 0]
     n = enu[:, 1]
     u = enu[:, 2]
     r = np.sqrt(e**2 + n**2 + u**2)
-    az = np.arctan2(e, n)
-    el = np.arcsin(u / r)
+    az_deg = np.degrees(np.arctan2(e, n))
+    el_rad = np.arcsin(u / r)
 
-    R = radius_of_curvature(lat, az)
+    R = radius_of_curvature(lat_deg, az_deg)  # type: ignore
     
-    X = R * np.sin(el)
+    X = R * np.sin(el_rad)
     Y = piercing_altitude**2 + 2 * R * piercing_altitude
     Z = np.sqrt(Y + X**2)
     delta_u = np.empty((N,))
-    idx = el < 0
+    idx = el_rad < 0
     delta_u[idx] = np.abs(-X[idx] - Z[idx])
     delta_u[~idx] = np.abs(-X[~idx] + Z[~idx])
         

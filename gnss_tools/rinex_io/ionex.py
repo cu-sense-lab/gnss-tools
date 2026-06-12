@@ -378,7 +378,7 @@ class IonexMap:
         return map_array
         
     # this function receives a list of lines rather than a TextIOWrapper
-    # since the function that parses all the maps will agregate lines for a single map
+    # since the function that parses all the maps will aggregate lines for a single map
     @staticmethod
     def parse(lines: List[str], map_type: str = "TEC", strict: bool = False) -> "IonexMap":
         

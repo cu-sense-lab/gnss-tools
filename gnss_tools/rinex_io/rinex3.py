@@ -764,7 +764,7 @@ def parse_header(input: io.TextIOWrapper, strict: bool = True) -> Header:
         rinex_version, file_type, system_code = parse_rinex_version_type(line)
 
     # Single-line header entries are parsed immediately
-    # Multi-line entries are agregated in a list and parsed once the end of the header is reached
+    # Multi-line entries are aggregated in a list and parsed once the end of the header is reached
     antenna_phase_center_lines: List[str] = []
     sys_num_obs_lines: List[str] = []
     sys_dcbs_applied_lines: List[str] = []
