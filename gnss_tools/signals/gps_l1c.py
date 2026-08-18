@@ -1,3 +1,15 @@
+"""
+GPS L1C pilot (L1CP) spreading code.
+
+INCOMPLETE: only the pilot component's Weil code is here. Missing: the L1CD
+data-channel code, carrier frequency / chip rate / code length constants (L1C
+shares GPS_L1's carrier with L1 C/A, see `catalog.py`), the CBOC/TMBOC
+subcarrier modulation (see the commented-out reference `boc()` in
+`signals/utils/__init__.py`), and CNAV-2 nav message support. Not wired into
+`catalog.py` for this reason -- a `Signal` entry needs a `chip_rate_hz` this
+module doesn't define. See the project's TODO.md.
+"""
+
 import numpy as np
 
 

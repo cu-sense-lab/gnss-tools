@@ -1,6 +1,7 @@
 **/__pycache__/**
 **/*.egg-info
 poetry.lock
+gnss_tools/signals/utils/hexfiles/
 
 ._*
 .DS_Store
