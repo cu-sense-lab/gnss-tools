@@ -132,19 +132,24 @@ def _download_ionex_for_day(
         overwrite: bool = False,
         data_dir: str | Path = DATA_DIR,
         filename_template: str = DEFAULT_IONEX_FILENAME_TEMPLATE,
+        verbose: bool = True,
 ) -> str:
     ionex_archive_path = format_filepath(IONEX_ARCHIVE_PATH_TEMPLATE, day)
     ionex_filename = format_filepath(filename_template, day)
     url = os.path.join(CDDIS_ARCHIVE_URL, ionex_archive_path, ionex_filename)
-    print(f"Downloading {url}", end="... ")
+    if verbose:
+        print(f"Downloading {url}", end="... ")
     output_filepath = os.path.join(data_dir, "cddis", ionex_archive_path, ionex_filename)
     if os.path.exists(output_filepath) and not overwrite:
-        print("Already downloaded")
+        if verbose:
+            print("Already downloaded")
         return output_filepath
     success = http_download(url, output_filepath, auth=EARTHDATA_AUTH)
     if success:
-        print("Success")
+        if verbose:
+            print("Success")
         return output_filepath
     else:
-        print("Failed")
+        if verbose:
+            print("Failed")
         raise Exception(f"Failed to download IONEX file for {day.strftime('%Y-%m-%d')}")
